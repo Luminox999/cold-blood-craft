@@ -8,7 +8,7 @@
         :root {
             --bg-color: #121212;
             --panel-bg: #1e1e1e;
-            --accent-color: #2e7d32; /* Зеленый цвет Свободы по умолчанию */
+            --accent-color: #2e7d32;
             --accent-hover: #388e3c;
             --text-color: #e0e0e0;
             --border-color: #333333;
@@ -26,127 +26,51 @@
             align-items: center;
         }
 
-        h1 {
-            color: #ffffff;
-            margin-bottom: 5px;
-            font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .server-sub {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        .container {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 1100px;
-            flex-wrap: wrap;
-        }
+        h1 { color: #ffffff; margin-bottom: 5px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        .server-sub { color: #888; font-size: 14px; margin-bottom: 25px; }
+        
+        .container { display: flex; gap: 20px; width: 100%; max-width: 1100px; flex-wrap: wrap; }
 
         .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 20px;
-            flex: 1;
-            min-width: 340px;
+            background-color: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 20px; flex: 1; min-width: 340px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .result-title {
-            border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 10px;
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;
+            margin-top: 0; margin-bottom: 15px; font-size: 16px; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #ffffff; display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Экран авторизации комнат */
         .auth-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10,10,10,0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10,10,10,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
 
         .auth-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 30px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-            text-align: center;
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            padding: 30px; border-radius: 8px; width: 100%; max-width: 400px; text-align: center;
         }
 
-        .input-field {
-            width: 100%;
-            background: #2b2b2b;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            color: #fff;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            font-size: 14px;
+        .input-field, .select-field {
+            width: 100%; background: #2b2b2b; border: 1px solid var(--border-color);
+            padding: 10px; color: #fff; border-radius: 4px; margin-bottom: 15px;
+            box-sizing: border-box; font-size: 14px; cursor: pointer;
         }
 
-        .input-field:focus {
-            border-color: var(--accent-color);
-            outline: none;
-        }
-
-        /* Навигация по вкладкам */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 1100px;
-        }
-
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 1100px; }
+        
         .tab-btn {
-            background: #252525;
-            color: #aaa;
-            border: 1px solid var(--border-color);
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
+            background: #252525; color: #aaa; border: 1px solid var(--border-color);
+            padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: 600; text-transform: uppercase; font-size: 12px;
         }
 
-        .tab-btn.active {
-            background: var(--accent-color);
-            color: #fff;
-            border-color: var(--accent-color);
-        }
+        .tab-btn.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
         .recipe-item, .material-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background-color: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 4px;
-            margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center; padding: 12px;
+            background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; margin-bottom: 10px;
         }
 
         .item-meta { display: flex; align-items: center; gap: 12px; }
@@ -154,14 +78,12 @@
         .recipe-name, .mat-name { font-weight: 500; font-size: 14px; }
         .mat-info { display: flex; flex-direction: column; gap: 4px; }
         .mat-needed-text { font-size: 11px; color: #aaa; }
-        
         .controls { display: flex; align-items: center; gap: 8px; }
         
         .btn {
-            background-color: #3a3a3a; color: #ffffff; border: none;
-            width: 32px; height: 32px; cursor: pointer; font-weight: bold;
-            font-size: 16px; border-radius: 4px; display: flex;
-            align-items: center; justify-content: center; user-select: none;
+            background-color: #3a3a3a; color: #ffffff; border: none; width: 32px; height: 32px;
+            cursor: pointer; font-weight: bold; font-size: 16px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; user-select: none;
         }
         .btn:hover { background-color: #4a4a4a; }
         .btn-plus { background-color: var(--accent-color); }
@@ -172,59 +94,67 @@
         
         .status-done { background-color: rgba(46, 125, 50, 0.15); border-color: rgba(46, 125, 50, 0.3); }
         .status-done .material-count { color: #81c784; }
-
-        .leader-badge {
-            background: #b71c1c; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold;
-        }
-        
+        .leader-badge { background: #b71c1c; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
         .empty-message { color: #777777; font-style: italic; text-align: center; padding: 20px; font-size: 14px; }
         
         /* Стили нарезчика */
+        .slicer-workspace { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .canvas-container { position: relative; border: 2px solid #444; background: #000; overflow: auto; max-height: 400px; }
         #screenshot-canvas { display: block; cursor: crosshair; }
         #crop-selector { position: absolute; border: 2px dashed var(--orange-color); background: rgba(255,183,77,0.2); display: none; pointer-events: none; }
         .slicer-controls-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 4px; margin-top: 10px;}
         .slicer-select { background: #2b2b2b; color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; min-width: 200px; }
+        #preview-canvas { background-color: rgba(0,0,0,0.5); border: 1px solid var(--orange-color); border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- ОКНО ВХОДА В КОМНАТУ -->
+    <!-- ОКНО ВХОДА -->
     <div class="auth-overlay" id="auth-screen">
         <div class="auth-box">
             <h2 style="margin-top:0; color:#fff;">Штаб Сети Cold Blood</h2>
-            <p style="color:#aaa; font-size:13px; margin-bottom:20px;">Введите название вашей группировки для синхронизации склада и задач.</p>
+            <p style="color:#aaa; font-size:13px; margin-bottom:20px;">Выберите вашу группировку для синхронизации склада и задач.</p>
             
-            <input type="text" id="room-input" class="input-field" placeholder="Название группировки (например: Свобода)">
+            <select id="room-input" class="select-field">
+                <option value="свобода">Свобода</option>
+                <option value="долг">Долг</option>
+                <option value="оксоп">ОКСОП</option>
+                <option value="военсталы">Военсталы</option>
+                <option value="нейтралы">Нейтралы</option>
+                <option value="бандиты">Бандиты</option>
+                <option value="ренегаты">Ренегаты</option>
+                <option value="ученые">Ученые НИИ</option>
+                <option value="чистое_небо">Чистое Небо</option>
+                <option value="наемники">Наёмники</option>
+                <option value="монолит">Монолит</option>
+                <option value="грех">Грех</option>
+            </select>
+            
             <input type="password" id="leader-pass-input" class="input-field" placeholder="Пароль Лидера (для управления задачами)">
-            
             <button class="btn btn-plus" id="btn-enter-room" style="width:100%; height:40px; font-size:14px;">Войти в штаб</button>
         </div>
     </div>
 
-    <!-- ШАПКА ИНТЕРФЕЙСА -->
+    <!-- ШАПКА -->
     <h1>Штаб Снабжения: <span id="current-room-title" style="color: var(--orange-color);">...</span></h1>
     <div class="server-sub">Общая синхронизируемая сеть серверов Cold Blood RP • <span id="user-status-text">Режим Бойца</span></div>
 
     <!-- НАВИГАЦИЯ -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('main-tab')">📦 Снабжение и Склад</button>
-        <button class="tab-btn" id="leader-tab-nav" onclick="switchTab('leader-tab')" style="display:none;">👑 Управление Лидера</button>
+        <button class="tab-btn" id="leader-tab-nav" style="display:none;" onclick="switchTab('leader-tab')">👑 Управление Лидера</button>
         <button class="tab-btn" onclick="switchTab('slicer-tab')">✂️ Нарезчик Иконок</button>
         <button class="tab-btn" style="background:#555; color:#fff; margin-left:auto;" onclick="location.reload()">🚪 Выйти</button>
     </div>
 
-    <!-- ВКЛАДКА 1: СКЛАД И ЗАДАЧИ -->
+    <!-- ВКЛАДКА 1 -->
     <div id="main-tab" class="container tab-content">
-        <!-- Левое окно: Приказы лидера -->
         <div class="panel">
             <div class="result-title">🎯 Текущий приказ лидера фракции</div>
             <div class="recipes-list" id="leader-orders-display">
-                <div class="empty-message">Лидер еще не выставил задачи для крафта. Отдыхайте, сталкеры.</div>
+                <div class="empty-message">Лидер еще не выставил задачи.</div>
             </div>
         </div>
-
-        <!-- Правое окно: Общий склад -->
         <div class="panel">
             <div class="result-title">🪵 Общий склад хлама группировки</div>
             <div class="material-list" id="global-warehouse-display">
@@ -233,17 +163,296 @@
         </div>
     </div>
 
-    <!-- ВКЛАДКА 2: ПАНЕЛЬ ЛИДЕРА -->
+    <!-- ВКЛАДКА 2 -->
     <div id="leader-tab" class="container tab-content" style="display: none;">
         <div class="panel">
             <div class="result-title">👑 Панель управления Лидера фракции <span class="leader-badge">ДОСТУП РАЗРЕШЕН</span></div>
-            <p style="font-size:13px; color:#aaa; margin-top:0;">Выставляйте количество предметов, которое фракция ОБЯЗАНА собрать. Изменения мгновенно отобразятся у всех бойцов.</p>
+            <p style="font-size:13px; color:#aaa; margin-top:0;">Выставляйте количество предметов для сбора фракцией.</p>
             <div class="recipes-list" id="leader-edit-list"></div>
         </div>
     </div>
 
-    <!-- ВКЛАДКА 3: НАРЕЗЧИК ИКОНОК -->
+    <!-- ВКЛАДКА 3 -->
     <div id="slicer-tab" class="container tab-content" style="display: none;">
         <div class="panel" style="border: 1px dashed var(--orange-color);">
             <div class="result-title" style="color: var(--orange-color); border-bottom-color: var(--orange-color);">🛠️ Интерактивный вырезатель иконок</div>
             <input type="file" id="screenshot-input" accept="image/*" style="margin-bottom: 15px; color: #fff;">
+            <div id="cropper-zone" style="display: none;"></div>
+            <canvas id="hidden-canvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <script>
+               const FIREBASE_URL = "https://firebasedatabase.app";
+
+        const craftData = {
+            "box_4": { name: "Ящик (Containers_DK4_Level_4)", image: "img/box_4.png", materials: { "Доски": 1, "Отвертка": 1, "Набор инструментов": 1, "Металлические пластины": 2, "Проволока": 2, "Журнал тех. разработок 2": 1 } },
+            "mosin": { name: "Винтовка Мосин 91/30", image: "img/mosin.png", materials: { "Металлические пластины": 2, "Оружейное масло": 1, "Изолента": 1, "Отвертка": 1, "Кусачки": 1, "Проволока": 2 } },
+            "journal_2": { name: "Журнал тех. разработок №2", image: "img/journal_2.png", materials: { "Журнал тех. разработок 1": 1, "Микросхема": 1, "Клей": 1, "Кожа": 1 } },
+            "journal_3": { name: "Журнал тех. разработок №3", image: "img/journal_3.png", materials: { "Журнал тех. разработок 2": 1, "Микросхема": 1, "Клей": 1, "Синяя ткань": 1, "Кожа": 1 } },
+            "sr25": { name: "Снайперская винтовка SR-25", image: "img/sr25.png", materials: { "Медный слиток": 5, "Металлический брусок": 5, "WD40 400мл": 3, "Набор для калибровки Мастер": 4, "Фазированная решетка РЛС": 4, "Накопитель VFX": 5, "Кусок резины": 4, "Контейнер оружие синий": 5, "Журнал технических разработок 5": 1, "Шеврон техника": 1 } },
+            "fine_tools": { name: "Набор для тонкой работы", image: "img/fine_tools.png", materials: { "Доски": 1, "Проволока": 1, "Изолента": 1, "Кусачки": 1, "Ткань": 1, "Журнал тех. разработок 2": 1 } },
+            "pszd": { name: "Комплект ПСЗД (Свобода)", image: "img/pszd.png", materials: { "Ткань": 1, "Бронеплита": 4, "Металлические пластины": 4, "Набор инструментов": 4, "Листовой металл": 3, "Противогазный фильтр": 2, "Аптечка Salewa": 1, "Журнал тех. разработок 1": 1 } },
+            "ak105": { name: "АК-105 Булл-пап", image: "img/ak105.png", materials: { "Проволока": 2, "Кусачки": 1, "Отвертка": 1, "Изолента": 1, "Металлические пластины": 2, "Набор для тонкой работы": 1, "Журнал тех. разработок 1": 1 } }
+        };
+
+        let currentRoom = "";
+        let isLeader = false;
+        let globalTargetCounts = {};
+        let globalWarehouse = {};
+
+        function getMaterialImagePath(name) {
+            const translit = name.toLowerCase().replace(/[^a-zа-я0-9\s]/g, '').trim().replace(/\s+/g, '_');
+            return "img/" + translit + ".png";
+        }
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).style.display = 'flex';
+            if (event && event.currentTarget) { event.currentTarget.classList.add('active'); }
+        };
+        document.addEventListener("DOMContentLoaded", function() {
+            initSlicerInterface();
+            
+            const enterBtn = document.getElementById('btn-enter-room');
+            if (!enterBtn) return;
+
+            enterBtn.onclick = function() {
+                const roomSelect = document.getElementById('room-input');
+                const roomInput = roomSelect.options[roomSelect.selectedIndex].text;
+                const passInput = document.getElementById('leader-pass-input').value.trim();
+
+                currentRoom = roomSelect.value;
+                document.getElementById('current-room-title').textContent = roomInput.toUpperCase();
+                
+                if(passInput === "свобода123") {
+                    isLeader = true;
+                    document.getElementById('leader-tab-nav').style.display = 'block';
+                    document.getElementById('user-status-text').textContent = "Режим ЛИДЕРА ГРУППИРОВКИ";
+                    document.getElementById('user-status-text').style.color = "#ffb74d";
+                }
+
+                document.getElementById('auth-screen').style.display = 'none';
+                
+                syncWithCloud();
+                setInterval(syncWithCloud, 3000);
+            };
+        });
+
+        function syncWithCloud() {
+            if (!currentRoom) return;
+            fetch(`${FIREBASE_URL}/rooms/${currentRoom}.json?nocache=${Date.now()}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data) {
+                    globalTargetCounts = data.targets || {};
+                    globalWarehouse = data.warehouse || {};
+                }
+                renderLeaderEditPanel();
+                renderMainDashboard();
+            })
+            .catch(err => console.error("Firebase Error:", err));
+        }
+
+        function sendDataToCloud(type, updatedData) {
+            if (!currentRoom) return;
+            fetch(`${FIREBASE_URL}/rooms/${currentRoom}/${type}.json`, {
+                method: 'PUT',
+                body: JSON.stringify(updatedData)
+            });
+        }
+
+        function renderMainDashboard() {
+            const ordersPanel = document.getElementById('leader-orders-display');
+            const warehousePanel = document.getElementById('global-warehouse-display');
+            if (!ordersPanel || !warehousePanel) return;
+            
+            ordersPanel.innerHTML = '';
+            warehousePanel.innerHTML = '';
+            let hasOrders = false;
+            const totalRequiredMaterials = {};
+
+            for (let k in craftData) {
+                const targetQty = globalTargetCounts[k] || 0;
+                if (targetQty > 0) {
+                    hasOrders = true;
+                    const item = craftData[k];
+                    const row = document.createElement('div');
+                    row.className = 'recipe-item';
+                    row.innerHTML = `<div class="item-meta"><img class="item-icon" src="${item.image}"><span class="recipe-name">${item.name}</span></div><span class="counter" style="color:#fff;">Приказ: ${targetQty} шт</span>`;
+                    ordersPanel.appendChild(row);
+
+                    for (let m in item.materials) {
+                        if (!totalRequiredMaterials[m]) totalRequiredMaterials[m] = 0;
+                        totalRequiredMaterials[m] += item.materials[m] * targetQty;
+                    }
+                }
+            }
+
+            if (!hasOrders) {
+                ordersPanel.innerHTML = '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
+                warehousePanel.innerHTML = '<div class="empty-message">Склад пуст, так как задачи отсутствуют.</div>';
+                return;
+            }
+
+            for (let m in totalRequiredMaterials) {
+                const reqQty = totalRequiredMaterials[m];
+                const stockQty = globalWarehouse[m] || 0;
+                const left = reqQty - stockQty;
+                const row = document.createElement('div');
+                row.className = 'material-item';
+                if (left <= 0) row.classList.add('status-done');
+
+                row.innerHTML = `
+                    <div class="item-meta">
+                        <img class="item-icon" src="${getMaterialImagePath(m)}">
+                        <div class="mat-info"><span class="mat-name">${m}</span><span class="mat-needed-text">По плану нужно: ${reqQty} шт</span></div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn" onclick="changeWarehouseStock('${m}', -1)">-</button>
+                        <span class="counter" style="color:#ffb74d;">${stockQty}</span>
+                        <button class="btn btn-plus" onclick="changeWarehouseStock('${m}', 1)">+</button>
+                        <span class="material-count">${left > 0 ? 'Надо: x' + left : 'Готово!'}</span>
+                    </div>
+                `;
+                warehousePanel.appendChild(row);
+            }
+        }
+
+        window.changeWarehouseStock = function(matName, val) {
+            let current = globalWarehouse[matName] || 0;
+            current += val; if (current < 0) current = 0;
+            globalWarehouse[matName] = current;
+            sendDataToCloud('warehouse', globalWarehouse);
+            renderMainDashboard();
+        };
+
+        function renderLeaderEditPanel() {
+            const p = document.getElementById('leader-edit-list');
+            if (!p || p.children.length > 0) return;
+
+            for (let k in craftData) {
+                const item = craftData[k];
+                const row = document.createElement('div');
+                row.className = 'recipe-item';
+                row.innerHTML = `<div class="item-meta"><img class="item-icon" src="${item.image}"><span class="recipe-name">${item.name}</span></div><div class="controls"><button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button><span class="counter" id="lead-cnt-${k}">0</span><button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button></div>`;
+                p.appendChild(row);
+            }
+        }
+
+        window.changeLeaderTarget = function(key, val) {
+            if (!isLeader) return;
+            let current = globalTargetCounts[key] || 0;
+            current += val; if (current < 0) current = 0;
+            globalTargetCounts[key] = current;
+            const countElement = document.getElementById(`lead-cnt-${key}`);
+            if (countElement) { countElement.textContent = current; }
+            sendDataToCloud('targets', globalTargetCounts);
+            renderMainDashboard();
+        };
+        function initSlicerInterface() {
+            const fileInput = document.getElementById('screenshot-input');
+            const outputZone = document.getElementById('cropper-zone');
+            if (!fileInput || !outputZone) return;
+
+            outputZone.innerHTML = `
+                <div class="slicer-workspace">
+                    <p style="font-size: 13px; color: #ffb74d; margin: 0;">🖱️ <strong>Инструкция:</strong> Зажмите мышь на скриншоте, выделите область иконки, выберите имя из списка и скачайте.</p>
+                    <div class="canvas-container">
+                        <canvas id="screenshot-canvas"></canvas>
+                        <div id="crop-selector"></div>
+                    </div>
+                    <div class="slicer-controls-row">
+                        <canvas id="preview-canvas" width="64" height="64"></canvas>
+                        <select id="material-selector" class="slicer-select"></select>
+                        <button id="btn-download-crop" class="btn btn-plus" style="width: auto; padding: 0 25px; height: 40px; font-size: 14px;">💾 Скачать иконку</button>
+                    </div>
+                </div>
+            `;
+
+            const canvas = document.getElementById('screenshot-canvas');
+            const ctx = canvas.getContext('2d');
+            const selector = document.getElementById('crop-selector');
+            const previewCanvas = document.getElementById('preview-canvas');
+            const pCtx = previewCanvas.getContext('2d');
+            const selectEl = document.getElementById('material-selector');
+            const btnDownload = document.getElementById('btn-download-crop');
+
+            let img = new Image();
+            let isDrawing = false;
+            let startX = 0, startY = 0, cropX = 0, cropY = 0, cropW = 0, cropH = 0;
+
+            const allMaterials = new Set();
+            for (let key in craftData) {
+                allMaterials.add(craftData[key].name);
+                for (let mat in craftData[key].materials) { allMaterials.add(mat); }
+            }
+            Array.from(allMaterials).sort().forEach(mat => {
+                const opt = document.createElement('option');
+                opt.value = mat; opt.textContent = mat; selectEl.appendChild(opt);
+            });
+
+            fileInput.addEventListener('change', function(e) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    img.onload = function() {
+                        canvas.width = img.width; canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0); outputZone.style.display = 'block';
+                        selector.style.display = 'none'; pCtx.clearRect(0, 0, 64, 64);
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(e.target.files);
+            });
+
+            canvas.addEventListener('mousedown', function(e) {
+                isDrawing = true;
+                const rect = canvas.getBoundingClientRect();
+                startX = (e.clientX - rect.left) * (canvas.width / rect.width);
+                startY = (e.clientY - rect.top) * (canvas.height / rect.height);
+                selector.style.display = 'block';
+            });
+
+            canvas.addEventListener('mousemove', function(e) {
+                if (!isDrawing) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const currentX = (e.clientX - rect.left) * scaleX;
+                const currentY = (e.clientY - rect.top) * scaleY;
+
+                cropX = Math.min(startX, currentX); cropY = Math.min(startY, currentY);
+                cropW = Math.abs(startX - currentX); cropH = Math.abs(startY - currentY);
+
+                selector.style.left = (cropX / scaleX) + 'px';
+                selector.style.top = (cropY / scaleY) + 'px';
+                selector.style.width = (cropW / scaleX) + 'px';
+                selector.style.height = (cropH / scaleY) + 'px';
+
+                if (cropW > 5 && cropH > 5) {
+                    pCtx.clearRect(0, 0, 64, 64);
+                    pCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, 64, 64);
+                }
+            });
+
+            window.addEventListener('mouseup', () => isDrawing = false);
+
+            btnDownload.onclick = function() {
+                if (cropW < 5) return alert('Выделите область рамкой!');
+                const targetName = selectEl.value;
+                let foundKey = Object.keys(craftData).find(k => craftData[k].name === targetName);
+                let fn = foundKey ? foundKey + ".png" : targetName.toLowerCase().replace(/[^a-zа-я0-9\s]/g, '').trim().replace(/\s+/g, '_') + ".png";
+
+                const saveCanvas = document.createElement('canvas');
+                saveCanvas.width = 64; saveCanvas.height = 64;
+                saveCanvas.getContext('2d').drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, 64, 64);
+
+                const link = document.createElement('a');
+                link.download = fn; link.href = saveCanvas.toDataURL('image/png'); link.click();
+            };
+        }
+
+    </script>
+</body>
+</html>
