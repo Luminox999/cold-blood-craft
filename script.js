@@ -1,6 +1,5 @@
 // НАСТРОЙКА ОБЛАКА FIREBASE
-// Ссылка на вашу личную базу данных успешно подключена!
-const FIREBASE_URL = "https://cold-blood-calc-default-rtdb.europe-west1.firebasedatabase.app";
+const FIREBASE_URL = "https://firebasedatabase.app";
 
 // База данных рецептов
 const craftData = {
@@ -16,64 +15,71 @@ const craftData = {
 
 let currentRoom = "";
 let isLeader = false;
-let globalTargetCounts = {}; // Цели лидера, загруженные из облака
-let globalWarehouse = {};    // Склад хлама фракции из облака
+let globalTargetCounts = {};
+let globalWarehouse = {};
 
 function getMaterialImagePath(name) {
     const translit = name.toLowerCase().replace(/[^a-zа-я0-9\s]/g, '').trim().replace(/\s+/g, '_');
     return "img/" + translit + ".png";
 }
 
-// Переключение вкладок верхнего меню
 window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).style.display = 'flex';
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
 };
 
-// ВХОД В КОМНАТУ ФРАКЦИИ
-document.getElementById('btn-enter-room').onclick = function() {
-    const roomInput = document.getElementById('room-input').value.trim();
-    const passInput = document.getElementById('leader-pass-input').value.trim();
+// Привязка клика после полной загрузки страницы
+document.addEventListener("DOMContentLoaded", function() {
+    const enterBtn = document.getElementById('btn-enter-room');
+    if (!enterBtn) return;
 
-    if(!roomInput) { alert("Введите название вашей группировки!"); return; }
+    enterBtn.onclick = function() {
+        const roomInput = document.getElementById('room-input').value.trim();
+        const passInput = document.getElementById('leader-pass-input').value.trim();
 
-    currentRoom = roomInput.toLowerCase().replace(/[^a-zа-я0-9]/g, '');
-    document.getElementById('current-room-title').textContent = roomInput.toUpperCase();
-    
-    // Пароль для лидера
-    if(passInput === "свобода123") {
-        isLeader = true;
-        document.getElementById('leader-tab-nav').style.display = 'block';
-        document.getElementById('user-status-text').textContent = "Режим ЛИДЕРА ГРУППИРОВКИ";
-        document.getElementById('user-status-text').style.color = "#ffb74d";
-    }
+        if(!roomInput) { alert("Введите название вашей группировки!"); return; }
 
-    document.getElementById('auth-screen').style.display = 'none';
-    
-    // Запуск синхронизации
-    syncWithCloud();
-    setInterval(syncWithCloud, 2000);
-};
+        currentRoom = roomInput.toLowerCase().replace(/[^a-zа-я0-9]/g, '');
+        document.getElementById('current-room-title').textContent = roomInput.toUpperCase();
+        
+        if(passInput === "свобода123") {
+            isLeader = true;
+            document.getElementById('leader-tab-nav').style.display = 'block';
+            document.getElementById('user-status-text').textContent = "Режим ЛИДЕРА ГРУППИРОВКИ";
+            document.getElementById('user-status-text').style.color = "#ffb74d";
+        }
 
-// ОТПРАВКА И ПОЛУЧЕНИЕ ДАННЫХ ИЗ ОБЛАКА
+        document.getElementById('auth-screen').style.display = 'none';
+        
+        syncWithCloud();
+        setInterval(syncWithCloud, 3000); // Синхронизация раз в 3 секунды
+    };
+});
+
 function syncWithCloud() {
     if (!currentRoom) return;
-
-    fetch(`${FIREBASE_URL}/rooms/${currentRoom}.json`)
-        .then(res => res.json())
-        .then(data => {
-            if (data) {
-                globalTargetCounts = data.targets || {};
-                globalWarehouse = data.warehouse || {};
-            }
-            renderLeaderEditPanel();
-            renderMainDashboard();
-        })
-        .catch(err => console.error("Ошибка сети:", err));
+    
+    // Добавили принудительное отключение кэша для стабильности fetch в онлайне
+    fetch(`${FIREBASE_URL}/rooms/${currentRoom}.json?nocache=${Date.now()}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Статус ответа сервера: ' + res.status);
+        return res.json();
+    })
+    .then(data => {
+        if (data) {
+            globalTargetCounts = data.targets || {};
+            globalWarehouse = data.warehouse || {};
+        }
+        renderLeaderEditPanel();
+        renderMainDashboard();
+    })
+    .catch(err => {
+        console.error("Критическая ошибка Firebase:", err);
+    });
 }
 
 function sendDataToCloud(type, updatedData) {
@@ -81,42 +87,32 @@ function sendDataToCloud(type, updatedData) {
     
     fetch(`${FIREBASE_URL}/rooms/${currentRoom}/${type}.json`, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData)
-    });
+    })
+    .catch(err => console.error("Ошибка отправки данных:", err));
 }
 
-// 1. ОТРИСОВКА ГЛАВНОГО ЭКРАНА (ДЛЯ ВСЕХ БОЙЦОВ)
 function renderMainDashboard() {
     const ordersPanel = document.getElementById('leader-orders-display');
     const warehousePanel = document.getElementById('global-warehouse-display');
-    
     if (!ordersPanel || !warehousePanel) return;
     
     ordersPanel.innerHTML = '';
     warehousePanel.innerHTML = '';
-
     let hasOrders = false;
     const totalRequiredMaterials = {};
 
-    // Выводим цели, поставленные лидером
     for (let k in craftData) {
         const targetQty = globalTargetCounts[k] || 0;
         if (targetQty > 0) {
             hasOrders = true;
             const item = craftData[k];
-            
             const row = document.createElement('div');
             row.className = 'recipe-item';
-            row.innerHTML = `
-                <div class="item-meta">
-                    <img class="item-icon" src="${item.image}" alt="">
-                    <span class="recipe-name">${item.name}</span>
-                </div>
-                <span class="counter" style="color:#fff;">Приказ: ${targetQty} шт</span>
-            `;
+            row.innerHTML = `<div class="item-meta"><img class="item-icon" src="${item.image}"><span class="recipe-name">${item.name}</span></div><span class="counter" style="color:#fff;">Приказ: ${targetQty} шт</span>`;
             ordersPanel.appendChild(row);
 
-            // Считаем сколько ВСЕГО хлама нужно на этот объем крафта
             for (let m in item.materials) {
                 if (!totalRequiredMaterials[m]) totalRequiredMaterials[m] = 0;
                 totalRequiredMaterials[m] += item.materials[m] * targetQty;
@@ -130,23 +126,18 @@ function renderMainDashboard() {
         return;
     }
 
-    // Выводим общий склад хлама с кнопками для бойцов
     for (let m in totalRequiredMaterials) {
         const reqQty = totalRequiredMaterials[m];
         const stockQty = globalWarehouse[m] || 0;
         const left = reqQty - stockQty;
-
         const row = document.createElement('div');
         row.className = 'material-item';
         if (left <= 0) row.classList.add('status-done');
 
         row.innerHTML = `
             <div class="item-meta">
-                <img class="item-icon" src="${getMaterialImagePath(m)}" alt="">
-                <div class="mat-info">
-                    <span class="mat-name">${m}</span>
-                    <span class="mat-needed-text">По плану нужно: ${reqQty} шт</span>
-                </div>
+                <img class="item-icon" src="${getMaterialImagePath(m)}">
+                <div class="mat-info"><span class="mat-name">${m}</span><span class="mat-needed-text">По плану нужно: ${reqQty} шт</span></div>
             </div>
             <div class="controls">
                 <button class="btn" onclick="changeWarehouseStock('${m}', -1)">-</button>
@@ -159,18 +150,15 @@ function renderMainDashboard() {
     }
 }
 
-// Изменение баланса склада бойцом
 window.changeWarehouseStock = function(matName, val) {
     let current = globalWarehouse[matName] || 0;
     current += val;
     if (current < 0) current = 0;
     globalWarehouse[matName] = current;
-    
     sendDataToCloud('warehouse', globalWarehouse);
     renderMainDashboard();
 };
 
-// 2. ОТРИСОВКА СЕКРЕТНОЙ ПАНЕЛИ ЛИДЕРА
 function renderLeaderEditPanel() {
     const p = document.getElementById('leader-edit-list');
     if (!p || p.children.length > 0) return;
@@ -179,18 +167,7 @@ function renderLeaderEditPanel() {
         const item = craftData[k];
         const row = document.createElement('div');
         row.className = 'recipe-item';
-        
-        row.innerHTML = `
-            <div class="item-meta">
-                <img class="item-icon" src="${item.image}" alt="">
-                <span class="recipe-name">${item.name}</span>
-            </div>
-            <div class="controls">
-                <button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button>
-                <span class="counter" id="lead-cnt-${k}">0</span>
-                <button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button>
-            </div>
-        `;
+        row.innerHTML = `<div class="item-meta"><img class="item-icon" src="${item.image}"><span class="recipe-name">${item.name}</span></div><div class="controls"><button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button><span class="counter" id="lead-cnt-${k}">0</span><button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button></div>`;
         p.appendChild(row);
     }
 }
@@ -201,12 +178,8 @@ window.changeLeaderTarget = function(key, val) {
     current += val;
     if (current < 0) current = 0;
     globalTargetCounts[key] = current;
-    
     const countElement = document.getElementById(`lead-cnt-${key}`);
-    if (countElement) {
-        countElement.textContent = current;
-    }
-    
+    if (countElement) { countElement.textContent = current; }
     sendDataToCloud('targets', globalTargetCounts);
     renderMainDashboard();
 };
