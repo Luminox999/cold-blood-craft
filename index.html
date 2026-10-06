@@ -240,21 +240,75 @@
             };
         });
 
+              // Исправленная синхронизация: теперь работает, даже если в базе пусто (null)
         function syncWithCloud() {
             if (!currentRoom) return;
             fetch(`${FIREBASE_URL}/rooms/${currentRoom}.json?nocache=${Date.now()}`)
             .then(res => res.json())
             .then(data => {
-                if (data) {
-                    globalTargetCounts = data.targets || {};
-                    globalWarehouse = data.warehouse || {};
+                // Если в базе вообще ничего нет, создаем пустые объекты, чтобы код не ломался
+                const safeData = data || {};
+                globalTargetCounts = safeData.targets || {};
+                globalWarehouse = safeData.warehouse || {};
+                
+                // Выводим логи на экран
+                const logPanel = document.getElementById('activity-log-display');
+                if (logPanel) {
+                    logPanel.innerHTML = "";
+                    if (safeData.logs) {
+                        const logArray = Object.values(safeData.logs).reverse().slice(0, 30);
+                        logArray.forEach(logText => {
+                            const line = document.createElement('div');
+                            line.textContent = logText;
+                            logPanel.appendChild(line);
+                        });
+                    } else {
+                        logPanel.innerHTML = '<div style="color: #777; font-style: italic;">Журнал пуст. Ждем поставок лута...</div>';
+                    }
                 }
+                
+                // Всегда запускаем отрисовку интерфейса
                 renderLeaderEditPanel();
                 renderMainDashboard();
             })
             .catch(err => console.error("Firebase Error:", err));
         }
 
+        // Исправленная панель лидера: теперь считывает текущие значения из базы при обновлении
+        function renderLeaderEditPanel() {
+            const p = document.getElementById('leader-edit-list');
+            if (!p) return;
+            
+            // Если панель еще не создана, создаем строки предметов
+            if (p.children.length === 0) {
+                for (let k in craftData) {
+                    const item = craftData[k];
+                    const row = document.createElement('div');
+                    row.className = 'recipe-item';
+                    
+                    row.innerHTML = `
+                        <div class="item-meta">
+                            <img class="item-icon" src="${item.image}" onerror="this.style.display='none'">
+                            <span class="recipe-name">${item.name}</span>
+                        </div>
+                        <div class="controls">
+                            <button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button>
+                            <span class="counter" id="lead-cnt-${k}">0</span>
+                            <button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button>
+                        </div>
+                    `;
+                    p.appendChild(row);
+                }
+            }
+            
+            // Обновляем цифры на кнопках лидера актуальными данными из облака
+            for (let k in craftData) {
+                const countElement = document.getElementById(`lead-cnt-${k}`);
+                if (countElement) {
+                    countElement.textContent = globalTargetCounts[k] || 0;
+                }
+            }
+        }
         function sendDataToCloud(type, updatedData) {
             if (!currentRoom) return;
             fetch(`${FIREBASE_URL}/rooms/${currentRoom}/${type}.json`, {
@@ -263,6 +317,7 @@
             });
         }
 
+             // Исправленный главный экран: склад доступен ВСЕГДА, даже без приказов лидера
         function renderMainDashboard() {
             const ordersPanel = document.getElementById('leader-orders-display');
             const warehousePanel = document.getElementById('global-warehouse-display');
@@ -273,14 +328,22 @@
             let hasOrders = false;
             const totalRequiredMaterials = {};
 
+            // 1. Отрисовка приказов лидера
             for (let k in craftData) {
                 const targetQty = globalTargetCounts[k] || 0;
                 if (targetQty > 0) {
                     hasOrders = true;
                     const item = craftData[k];
+                    
                     const row = document.createElement('div');
                     row.className = 'recipe-item';
-                    row.innerHTML = `<div class="item-meta"><img class="item-icon" src="${item.image}"><span class="recipe-name">${item.name}</span></div><span class="counter" style="color:#fff;">Приказ: ${targetQty} шт</span>`;
+                    row.innerHTML = `
+                        <div class="item-meta">
+                            <img class="item-icon" src="${item.image}" onerror="this.style.display='none'">
+                            <span class="recipe-name">${item.name}</span>
+                        </div>
+                        <span class="counter" style="color:#fff;">Приказ: ${targetQty} шт</span>
+                    `;
                     ordersPanel.appendChild(row);
 
                     for (let m in item.materials) {
@@ -292,33 +355,58 @@
 
             if (!hasOrders) {
                 ordersPanel.innerHTML = '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
-                warehousePanel.innerHTML = '<div class="empty-message">Склад пуст, так как задачи отсутствуют.</div>';
-                return;
             }
 
-            for (let m in totalRequiredMaterials) {
-                const reqQty = totalRequiredMaterials[m];
-                const stockQty = globalWarehouse[m] || 0;
+            // 2. Отрисовка общего склада хлама (Доступен всегда!)
+            // Собираем абсолютно весь хлам из всех существующих рецептов игры
+            const allPossibleMaterials = new Set();
+            for (let k in craftData) {
+                for (let m in craftData[k].materials) {
+                    allPossibleMaterials.add(m);
+                }
+            }
+
+            // Выводим каждую ячейку склада
+            Array.from(allPossibleMaterials).sort().forEach(m => {
+                const reqQty = totalRequiredMaterials[m] || 0; // Сколько нужно по плану (0, если плана нет)
+                const stockQty = globalWarehouse[m] || 0;       // Сколько реально лежит на складе
                 const left = reqQty - stockQty;
+
                 const row = document.createElement('div');
                 row.className = 'material-item';
-                if (left <= 0) row.classList.add('status-done');
+                
+                // Подсветка статуса выполнения плана
+                let statusText = "";
+                if (reqQty > 0) {
+                    if (left <= 0) {
+                        row.classList.add('status-done');
+                        statusText = "Готово!";
+                    } else {
+                        statusText = `Надо: x${left}`;
+                    }
+                } else {
+                    statusText = "Вне плана";
+                }
 
                 row.innerHTML = `
                     <div class="item-meta">
-                        <img class="item-icon" src="${getMaterialImagePath(m)}">
-                        <div class="mat-info"><span class="mat-name">${m}</span><span class="mat-needed-text">По плану нужно: ${reqQty} шт</span></div>
+                        <img class="item-icon" src="${getMaterialImagePath(m)}" onerror="this.style.display='none'">
+                        <div class="mat-info">
+                            <span class="mat-name">${m}</span>
+                            <span class="mat-needed-text">${reqQty > 0 ? 'По плану требуется: ' + reqQty : 'План на этот хлам не задан'}</span>
+                        </div>
                     </div>
                     <div class="controls">
                         <button class="btn" onclick="changeWarehouseStock('${m}', -1)">-</button>
                         <span class="counter" style="color:#ffb74d;">${stockQty}</span>
                         <button class="btn btn-plus" onclick="changeWarehouseStock('${m}', 1)">+</button>
-                        <span class="material-count">${left > 0 ? 'Надо: x' + left : 'Готово!'}</span>
+                        <span class="material-count">${statusText}</span>
                     </div>
                 `;
                 warehousePanel.appendChild(row);
-            }
+            });
         }
+
 
         window.changeWarehouseStock = function(matName, val) {
             let current = globalWarehouse[matName] || 0;
