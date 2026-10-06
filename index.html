@@ -1,189 +1,46 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cold Blood RP - Снабжение Группировок</title>
-    <style>
-        :root {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
-            --accent-color: #2e7d32;
-            --accent-hover: #388e3c;
-            --text-color: #e0e0e0;
-            --border-color: #333333;
-            --orange-color: #ffb74d;
+        // 🛡️ ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ОШИБОК ДЛЯ БЛОКНОТА
+        window.onerror = function(message, source, lineno, colno, error) {
+            const logEl = document.getElementById('tester-status-log');
+            if (logEl) {
+                logEl.style.color = '#ff5252';
+                logEl.innerHTML += `<div style="margin-top:5px; font-weight:bold;">❌ КРИТИЧЕСКИЙ СБОЙ В КОДЕ:</div>`;
+                logEl.innerHTML += `<div>Ошибка: ${message}</div>`;
+                logEl.innerHTML += `<div>Файл: ${source.split('/').pop()} (Строка: ${lineno}, Колонка: ${colno})</div>`;
+            }
+            return false;
+        };
+
+        // 🧪 ФУНКЦИЯ ЗАПУСКА АВТОТЕСТОВ КОМПОНЕНТОВ
+        function runSystemAutoTests() {
+            const logEl = document.getElementById('tester-status-log');
+            if (!logEl) return;
+            try {
+                if (typeof craftData === 'undefined' || !craftData.sr25) {
+                    throw new Error("База рецептов craftData не найдена или повреждена!");
+                }
+                logEl.innerHTML += `<div>✅ Тест 1 пройден: База рецептов успешно загружена в память.</div>`;
+
+                if (!FIREBASE_URL || FIREBASE_URL.includes("ЗАМЕНИ_МЕНЯ")) {
+                    throw new Error("Ссылка на облако Firebase указана неверно или отсутствует!");
+                }
+                logEl.innerHTML += `<div>✅ Тест 2 пройден: Ссылка на Firebase Realtime Database вшита корректно.</div>`;
+
+                const requiredIds = ['room-input', 'btn-enter-room', 'leader-orders-display', 'global-warehouse-display'];
+                requiredIds.forEach(id => {
+                    if (!document.getElementById(id)) {
+                        throw new Error(`В файле index.html потерялся обязательный элемент с id="${id}"!`);
+                    }
+                });
+                logEl.innerHTML += `<div>✅ Тест 3 пройден: Все критические элементы интерфейса на месте.</div>`;
+                logEl.innerHTML += `<div style="color: #64b5f6; font-weight:bold; margin-top:5px;">🚀 Системный статус: Калькулятор полностью исправен и готов к авторизации фракции.</div>`;
+            } catch (testError) {
+                logEl.style.color = '#ff5252';
+                logEl.innerHTML += `<div style="margin-top:5px; font-weight:bold;">⚠️ ТЕСТ НЕ ПРОЙДЕН:</div>`;
+                logEl.innerHTML += `<div>Причина: ${testError.message}</div>`;
+            }
         }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 { color: #ffffff; margin-bottom: 5px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
-        .server-sub { color: #888; font-size: 14px; margin-bottom: 25px; }
-        
-        .container { display: flex; gap: 20px; width: 100%; max-width: 1100px; flex-wrap: wrap; }
-
-        .panel {
-            background-color: var(--panel-bg); border: 1px solid var(--border-color);
-            border-radius: 6px; padding: 20px; flex: 1; min-width: 340px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .result-title {
-            border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;
-            margin-top: 0; margin-bottom: 15px; font-size: 16px; text-transform: uppercase;
-            letter-spacing: 0.5px; color: #ffffff; display: flex; justify-content: space-between; align-items: center;
-        }
-
-        .auth-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10,10,10,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000;
-        }
-
-        .auth-box {
-            background: var(--panel-bg); border: 1px solid var(--border-color);
-            padding: 30px; border-radius: 8px; width: 100%; max-width: 400px; text-align: center;
-        }
-
-        .input-field, .select-field {
-            width: 100%; background: #2b2b2b; border: 1px solid var(--border-color);
-            padding: 10px; color: #fff; border-radius: 4px; margin-bottom: 15px;
-            box-sizing: border-box; font-size: 14px; cursor: pointer;
-        }
-
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 1100px; }
-        
-        .tab-btn {
-            background: #252525; color: #aaa; border: 1px solid var(--border-color);
-            padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: 600; text-transform: uppercase; font-size: 12px;
-        }
-
-        .tab-btn.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
-
-        .recipe-item, .material-item {
-            display: flex; justify-content: space-between; align-items: center; padding: 12px;
-            background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; margin-bottom: 10px;
-        }
-
-        .item-meta { display: flex; align-items: center; gap: 12px; }
-        .item-icon { width: 40px; height: 40px; object-fit: contain; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 4px; }
-        .recipe-name, .mat-name { font-weight: 500; font-size: 14px; }
-        .mat-info { display: flex; flex-direction: column; gap: 4px; }
-        .mat-needed-text { font-size: 11px; color: #aaa; }
-        .controls { display: flex; align-items: center; gap: 8px; }
-        
-        .btn {
-            background-color: #3a3a3a; color: #ffffff; border: none; width: 32px; height: 32px;
-            cursor: pointer; font-weight: bold; font-size: 16px; border-radius: 4px;
-            display: flex; align-items: center; justify-content: center; user-select: none;
-        }
-        .btn:hover { background-color: #4a4a4a; }
-        .btn-plus { background-color: var(--accent-color); }
-        .btn-plus:hover { background-color: var(--accent-hover); }
-        
-        .counter { min-width: 25px; text-align: center; font-weight: bold; font-size: 15px; }
-        .material-count { color: var(--orange-color); font-weight: bold; margin-left: 10px; }
-        
-        .status-done { background-color: rgba(46, 125, 50, 0.15); border-color: rgba(46, 125, 50, 0.3); }
-        .status-done .material-count { color: #81c784; }
-        .leader-badge { background: #b71c1c; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
-        .empty-message { color: #777777; font-style: italic; text-align: center; padding: 20px; font-size: 14px; }
-        
-        /* Стили нарезчика */
-        .slicer-workspace { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-        .canvas-container { position: relative; border: 2px solid #444; background: #000; overflow: auto; max-height: 400px; }
-        #screenshot-canvas { display: block; cursor: crosshair; }
-        #crop-selector { position: absolute; border: 2px dashed var(--orange-color); background: rgba(255,183,77,0.2); display: none; pointer-events: none; }
-        .slicer-controls-row { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 4px; margin-top: 10px;}
-        .slicer-select { background: #2b2b2b; color: #fff; border: 1px solid var(--border-color); padding: 8px; border-radius: 4px; min-width: 200px; }
-        #preview-canvas { background-color: rgba(0,0,0,0.5); border: 1px solid var(--orange-color); border-radius: 4px; }
-    </style>
-</head>
-<body>
-
-    <!-- ОКНО ВХОДА -->
-    <div class="auth-overlay" id="auth-screen">
-        <div class="auth-box">
-            <h2 style="margin-top:0; color:#fff;">Штаб Сети Cold Blood</h2>
-            <p style="color:#aaa; font-size:13px; margin-bottom:20px;">Выберите вашу группировку для синхронизации склада и задач.</p>
-            
-            <select id="room-input" class="select-field">
-                <option value="свобода">Свобода</option>
-                <option value="долг">Долг</option>
-                <option value="оксоп">ОКСОП</option>
-                <option value="военсталы">Военсталы</option>
-                <option value="нейтралы">Нейтралы</option>
-                <option value="бандиты">Бандиты</option>
-                <option value="ренегаты">Ренегаты</option>
-                <option value="ученые">Ученые НИИ</option>
-                <option value="чистое_небо">Чистое Небо</option>
-                <option value="наемники">Наёмники</option>
-                <option value="монолит">Монолит</option>
-                <option value="грех">Грех</option>
-            </select>
-            
-            <input type="password" id="leader-pass-input" class="input-field" placeholder="Пароль Лидера (для управления задачами)">
-            <button class="btn btn-plus" id="btn-enter-room" style="width:100%; height:40px; font-size:14px;">Войти в штаб</button>
-        </div>
-    </div>
-
-    <!-- ШАПКА -->
-    <h1>Штаб Снабжения: <span id="current-room-title" style="color: var(--orange-color);">...</span></h1>
-    <div class="server-sub">Общая синхронизируемая сеть серверов Cold Blood RP • <span id="user-status-text">Режим Бойца</span></div>
-
-    <!-- НАВИГАЦИЯ -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('main-tab')">📦 Снабжение и Склад</button>
-        <button class="tab-btn" id="leader-tab-nav" style="display:none;" onclick="switchTab('leader-tab')">👑 Управление Лидера</button>
-        <button class="tab-btn" onclick="switchTab('slicer-tab')">✂️ Нарезчик Иконок</button>
-        <button class="tab-btn" style="background:#555; color:#fff; margin-left:auto;" onclick="location.reload()">🚪 Выйти</button>
-    </div>
-
-    <!-- ВКЛАДКА 1 -->
-    <div id="main-tab" class="container tab-content">
-        <div class="panel">
-            <div class="result-title">🎯 Текущий приказ лидера фракции</div>
-            <div class="recipes-list" id="leader-orders-display">
-                <div class="empty-message">Лидер еще не выставил задачи.</div>
-            </div>
-        </div>
-        <div class="panel">
-            <div class="result-title">🪵 Общий склад хлама группировки</div>
-            <div class="material-list" id="global-warehouse-display">
-                <div class="empty-message">Задачи отсутствуют, склад пуст.</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ВКЛАДКА 2 -->
-    <div id="leader-tab" class="container tab-content" style="display: none;">
-        <div class="panel">
-            <div class="result-title">👑 Панель управления Лидера фракции <span class="leader-badge">ДОСТУП РАЗРЕШЕН</span></div>
-            <p style="font-size:13px; color:#aaa; margin-top:0;">Выставляйте количество предметов для сбора фракцией.</p>
-            <div class="recipes-list" id="leader-edit-list"></div>
-        </div>
-    </div>
-
-    <!-- ВКЛАДКА 3 -->
-    <div id="slicer-tab" class="container tab-content" style="display: none;">
-        <div class="panel" style="border: 1px dashed var(--orange-color);">
-            <div class="result-title" style="color: var(--orange-color); border-bottom-color: var(--orange-color);">🛠️ Интерактивный вырезатель иконок</div>
-            <input type="file" id="screenshot-input" accept="image/*" style="margin-bottom: 15px; color: #fff;">
-            <div id="cropper-zone" style="display: none;"></div>
-            <canvas id="hidden-canvas" style="display: none;"></canvas>
-        </div>
-    </div>
-
-    <script>
-               const FIREBASE_URL = "https://firebasedatabase.app";
+        window.addEventListener('load', runSystemAutoTests);
+        const FIREBASE_URL = "https://firebasedatabase.app";
 
         const craftData = {
             "box_4": { name: "Ящик (Containers_DK4_Level_4)", image: "img/box_4.png", materials: { "Доски": 1, "Отвертка": 1, "Набор инструментов": 1, "Металлические пластины": 2, "Проволока": 2, "Журнал тех. разработок 2": 1 } },
@@ -240,75 +97,21 @@
             };
         });
 
-              // Исправленная синхронизация: теперь работает, даже если в базе пусто (null)
         function syncWithCloud() {
             if (!currentRoom) return;
             fetch(`${FIREBASE_URL}/rooms/${currentRoom}.json?nocache=${Date.now()}`)
             .then(res => res.json())
             .then(data => {
-                // Если в базе вообще ничего нет, создаем пустые объекты, чтобы код не ломался
                 const safeData = data || {};
                 globalTargetCounts = safeData.targets || {};
                 globalWarehouse = safeData.warehouse || {};
                 
-                // Выводим логи на экран
-                const logPanel = document.getElementById('activity-log-display');
-                if (logPanel) {
-                    logPanel.innerHTML = "";
-                    if (safeData.logs) {
-                        const logArray = Object.values(safeData.logs).reverse().slice(0, 30);
-                        logArray.forEach(logText => {
-                            const line = document.createElement('div');
-                            line.textContent = logText;
-                            logPanel.appendChild(line);
-                        });
-                    } else {
-                        logPanel.innerHTML = '<div style="color: #777; font-style: italic;">Журнал пуст. Ждем поставок лута...</div>';
-                    }
-                }
-                
-                // Всегда запускаем отрисовку интерфейса
                 renderLeaderEditPanel();
                 renderMainDashboard();
             })
             .catch(err => console.error("Firebase Error:", err));
         }
 
-        // Исправленная панель лидера: теперь считывает текущие значения из базы при обновлении
-        function renderLeaderEditPanel() {
-            const p = document.getElementById('leader-edit-list');
-            if (!p) return;
-            
-            // Если панель еще не создана, создаем строки предметов
-            if (p.children.length === 0) {
-                for (let k in craftData) {
-                    const item = craftData[k];
-                    const row = document.createElement('div');
-                    row.className = 'recipe-item';
-                    
-                    row.innerHTML = `
-                        <div class="item-meta">
-                            <img class="item-icon" src="${item.image}" onerror="this.style.display='none'">
-                            <span class="recipe-name">${item.name}</span>
-                        </div>
-                        <div class="controls">
-                            <button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button>
-                            <span class="counter" id="lead-cnt-${k}">0</span>
-                            <button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button>
-                        </div>
-                    `;
-                    p.appendChild(row);
-                }
-            }
-            
-            // Обновляем цифры на кнопках лидера актуальными данными из облака
-            for (let k in craftData) {
-                const countElement = document.getElementById(`lead-cnt-${k}`);
-                if (countElement) {
-                    countElement.textContent = globalTargetCounts[k] || 0;
-                }
-            }
-        }
         function sendDataToCloud(type, updatedData) {
             if (!currentRoom) return;
             fetch(`${FIREBASE_URL}/rooms/${currentRoom}/${type}.json`, {
@@ -317,7 +120,6 @@
             });
         }
 
-             // Исправленный главный экран: склад доступен ВСЕГДА, даже без приказов лидера
         function renderMainDashboard() {
             const ordersPanel = document.getElementById('leader-orders-display');
             const warehousePanel = document.getElementById('global-warehouse-display');
@@ -328,7 +130,6 @@
             let hasOrders = false;
             const totalRequiredMaterials = {};
 
-            // 1. Отрисовка приказов лидера
             for (let k in craftData) {
                 const targetQty = globalTargetCounts[k] || 0;
                 if (targetQty > 0) {
@@ -357,8 +158,6 @@
                 ordersPanel.innerHTML = '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
             }
 
-            // 2. Отрисовка общего склада хлама (Доступен всегда!)
-            // Собираем абсолютно весь хлам из всех существующих рецептов игры
             const allPossibleMaterials = new Set();
             for (let k in craftData) {
                 for (let m in craftData[k].materials) {
@@ -366,16 +165,13 @@
                 }
             }
 
-            // Выводим каждую ячейку склада
             Array.from(allPossibleMaterials).sort().forEach(m => {
-                const reqQty = totalRequiredMaterials[m] || 0; // Сколько нужно по плану (0, если плана нет)
-                const stockQty = globalWarehouse[m] || 0;       // Сколько реально лежит на складе
+                const reqQty = totalRequiredMaterials[m] || 0;
+                const stockQty = globalWarehouse[m] || 0;
                 const left = reqQty - stockQty;
-
                 const row = document.createElement('div');
                 row.className = 'material-item';
                 
-                // Подсветка статуса выполнения плана
                 let statusText = "";
                 if (reqQty > 0) {
                     if (left <= 0) {
@@ -407,7 +203,6 @@
             });
         }
 
-
         window.changeWarehouseStock = function(matName, val) {
             let current = globalWarehouse[matName] || 0;
             current += val; if (current < 0) current = 0;
@@ -415,16 +210,24 @@
             sendDataToCloud('warehouse', globalWarehouse);
             renderMainDashboard();
         };
-
         function renderLeaderEditPanel() {
             const p = document.getElementById('leader-edit-list');
             if (!p || p.children.length > 0) return;
-
             for (let k in craftData) {
                 const item = craftData[k];
                 const row = document.createElement('div');
                 row.className = 'recipe-item';
-                row.innerHTML = `<div class="item-meta"><img class="item-icon" src="${item.image}"><span class="recipe-name">${item.name}</span></div><div class="controls"><button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button><span class="counter" id="lead-cnt-${k}">0</span><button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button></div>`;
+                row.innerHTML = `
+                    <div class="item-meta">
+                        <img class="item-icon" src="${item.image}" onerror="this.style.display='none'">
+                        <span class="recipe-name">${item.name}</span>
+                    </div>
+                    <div class="controls">
+                        <button class="btn" onclick="changeLeaderTarget('${k}', -1)">-</button>
+                        <span class="counter" id="lead-cnt-${k}">0</span>
+                        <button class="btn btn-plus" onclick="changeLeaderTarget('${k}', 1)">+</button>
+                    </div>
+                `;
                 p.appendChild(row);
             }
         }
@@ -439,6 +242,7 @@
             sendDataToCloud('targets', globalTargetCounts);
             renderMainDashboard();
         };
+
         function initSlicerInterface() {
             const fileInput = document.getElementById('screenshot-input');
             const outputZone = document.getElementById('cropper-zone');
@@ -527,7 +331,7 @@
             window.addEventListener('mouseup', () => isDrawing = false);
 
             btnDownload.onclick = function() {
-                if (cropW < 5) return alert('Выделите область рамкой!');
+                if (cropW < 5) return alert('Выделите область!');
                 const targetName = selectEl.value;
                 let foundKey = Object.keys(craftData).find(k => craftData[k].name === targetName);
                 let fn = foundKey ? foundKey + ".png" : targetName.toLowerCase().replace(/[^a-zа-я0-9\s]/g, '').trim().replace(/\s+/g, '_') + ".png";
@@ -540,7 +344,4 @@
                 link.download = fn; link.href = saveCanvas.toDataURL('image/png'); link.click();
             };
         }
-
     </script>
-</body>
-</html>
