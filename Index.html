@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cold Blood RP - Снабжение Группировок</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="auth-overlay" id="auth-screen">
+        <div class="auth-box">
+            <h2>Штаб Сети Cold Blood</h2>
+            <p>Выберите вашу группировку для синхронизации склада и задач.</p>
+            
+            <select id="room-input" class="select-field">
+                <option value="свобода">Свобода</option>
+                <option value="долг">Долг</option>
+                <option value="оксоп">ОКСОП</option>
+                <option value="военсталы">Военсталы</option>
+                <option value="нейтралы">Нейтралы</option>
+                <option value="бандиты">Бандиты</option>
+                <option value="ренегаты">Ренегаты</option>
+                <option value="ученые">Ученые НИИ</option>
+                <option value="чистое_небо">Чистое Небо</option>
+                <option value="наемники">Наёмники</option>
+                <option value="монолит">Монолит</option>
+                <option value="грех">Грех</option>
+            </select>
+            
+            <input type="password" id="leader-pass-input" class="input-field" placeholder="Пароль Лидера">
+            <button class="btn btn-plus" id="btn-enter-room">Войти в штаб</button>
+        </div>
+    </div>
+
+    <h1>Штаб Снабжения: <span id="current-room-title">...</span></h1>
+    <div class="server-sub">Общая синхронизируемая сеть Cold Blood RP • <span id="user-status-text">Режим Бойца</span></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('main-tab')">📦 Снабжение и Склад</button>
+        <button class="tab-btn" id="leader-tab-nav" style="display:none;" onclick="switchTab('leader-tab')">👑 Управление Лидера</button>
+        <button class="tab-btn" onclick="switchTab('slicer-tab')">✂️ Нарезчик Иконок</button>
+        <button class="tab-btn" style="background:#555; color:#fff; margin-left:auto;" onclick="location.reload()">🚪 Выйти</button>
+    </div>
+    <!-- ВКЛАДКА 1: СКЛАД И ЗАДАЧИ -->
+    <div id="main-tab" class="container tab-content">
+        <div class="panel">
+            <div class="result-title">🎯 Текущий приказ лидера фракции</div>
+            <div class="recipes-list" id="leader-orders-display">
+                <div class="empty-message">Лидер еще не выставил задачи.</div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="result-title">🪵 Общий склад хлама группировки</div>
+            <div class="material-list" id="global-warehouse-display">
+                <div class="empty-message">Задачи отсутствуют, склад пуст.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 2: ПАНЕЛЬ ЛИДЕРА -->
+    <div id="leader-tab" class="container tab-content" style="display: none;">
+        <div class="panel">
+            <div class="result-title">👑 Панель управления Лидера фракции <span class="leader-badge">ДОСТУП РАЗРЕШЕН</span></div>
+            <p style="font-size:13px; color:#aaa; margin-top:0;">Выставляйте количество предметов для сбора фракцией.</p>
+            <div class="recipes-list" id="leader-edit-list"></div>
+        </div>
+    </div>
+
+    <!-- ВКЛАДКА 3: НАРЕЗЧИК ИКОНОК -->
+    <div id="slicer-tab" class="container tab-content" style="display: none;">
+        <div class="panel" style="border: 1px dashed var(--orange-color);">
+            <div class="result-title" style="color: var(--orange-color); border-bottom-color: var(--orange-color);">🛠️ Интерактивный вырезатель иконок</div>
+            <input type="file" id="screenshot-input" accept="image/*" style="margin-bottom: 15px; color: #fff;">
+            <div id="cropper-zone" style="display: none;"></div>
+            <canvas id="hidden-canvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <!-- БЛОК СИСТЕМНОЙ ДИАГНОСТИКИ И ТЕСТОВ -->
+    <div class="container" style="margin-top: 20px;">
+        <div class="panel" style="border: 1px solid #555; background: #151515;">
+            <div class="result-title" style="color: #ff5252; border-bottom-color: #ff5252;">🖥️ Системный Тестер и Диагностика</div>
+            <div id="tester-status-log" style="font-family: monospace; font-size: 12px; line-height: 1.6; color: #81c784;">
+                <div>[СТАРТ ТЕСТА] Инициализация систем самопроверки...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПОДКЛЮЧЕНИЕ СЦЕНАРИЕВ С ЧИСТЫМИ КАВЫЧКАМИ -->
+    <script src="craftData.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
