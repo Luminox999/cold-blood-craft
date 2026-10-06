@@ -258,9 +258,9 @@ function initSlicerInterface() {
         cropX = Math.min(startX, currentX); cropY = Math.min(startY, currentY);
         cropW = Math.abs(startX - currentX); cropH = Math.abs(startY - currentY);
 
-        selector.style.left = (cropX / scaleX) + "px";
-        selector.style.top = (cropY / scaleY) + 'px';
-        selector.style.width = (cropW / scaleX) + "px';
+             selector.style.left = (cropX / scaleX) + "px";
+        selector.style.top = (cropY / scaleY) + "px";
+        selector.style.width = (cropW / scaleX) + "px";
         selector.style.height = (cropH / scaleY) + "px";
 
         if (cropW > 5 && cropH > 5) {
@@ -268,6 +268,24 @@ function initSlicerInterface() {
             pCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, 64, 64);
         }
     });
+
+    window.addEventListener("mouseup", function() { isDrawing = false; });
+
+    btnDownload.onclick = function() {
+        if (cropW < 5) return alert("Выделите область!");
+        const targetName = selectEl.value;
+        let foundKey = Object.keys(craftData).find(function(k) { return craftData[k].name === targetName; });
+        let fn = foundKey ? foundKey + ".png" : targetName.toLowerCase().replace(/[^a-zа-я0-9\s]/g, "").trim().replace(/\s+/g, "_") + ".png";
+
+        const saveCanvas = document.createElement("canvas");
+        saveCanvas.width = 64; saveCanvas.height = 64;
+        saveCanvas.getContext("2d").drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, 64, 64);
+
+        const link = document.createElement("a");
+        link.download = fn; link.href = saveCanvas.toDataURL("image/png"); link.click();
+    };
+}
+
 
     window.addEventListener("mouseup", function() { isDrawing = false; });
 
