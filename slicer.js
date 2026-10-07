@@ -13,26 +13,27 @@ function initSlicerInterface() {
     var selectEl = document.getElementById("material-selector");
     var btnDownload = document.getElementById("btn-download-crop");
 
-    let img = new Image();
-    // Фиксированный размер игровой иконки
+    var img = new Image();
     var itemSize = 64; 
     var cropX = 0, cropY = 0;
 
-    // Устанавливаем фиксированные размеры для рамки выбора в стилях
     selector.style.width = itemSize + "px";
     selector.style.height = itemSize + "px";
 
     var allMaterials = new Set();
-    for (let key in craftData) {
+    for (var key in craftData) {
         allMaterials.add(craftData[key].name);
-        for (let mat in craftData[key].materials) { allMaterials.add(mat); }
+        for (var mat in craftData[key].materials) { allMaterials.add(mat); }
     }
     Array.from(allMaterials).sort().forEach(function(mat) {
         var opt = document.createElement("option");
         opt.value = mat; opt.textContent = mat; selectEl.appendChild(opt);
     });
 
-    fileInput.addEventListener("change", function(e) {
+    fileInput.onchange = function(e) {
+        var files = e.target.files;
+        if (!files || files.length === 0) return;
+        
         var reader = new FileReader();
         reader.onload = function(ev) {
             img.onload = function() {
@@ -42,23 +43,20 @@ function initSlicerInterface() {
             };
             img.src = ev.target.result;
         };
-        reader.readAsDataURL(e.target.files);
-    });
+        reader.readAsDataURL(files[0]);
+    };
 
-    // Рамка просто следует за мышкой по скриншоту
     canvas.addEventListener("mousemove", function(e) {
         var rect = canvas.getBoundingClientRect();
         var scaleX = canvas.width / rect.width;
         var scaleY = canvas.height / rect.height;
 
-        // Центрируем фиксированную рамку вокруг курсора мыши
         var mouseX = (e.clientX - rect.left) * scaleX;
         var mouseY = (e.clientY - rect.top) * scaleY;
 
         cropX = Math.round(mouseX - itemSize / 2);
         cropY = Math.round(mouseY - itemSize / 2);
 
-        // Держим рамку в границах картинки скриншота
         if (cropX < 0) cropX = 0;
         if (cropY < 0) cropY = 0;
         if (cropX + itemSize > canvas.width) cropX = canvas.width - itemSize;
@@ -69,7 +67,6 @@ function initSlicerInterface() {
         selector.style.display = "block";
     });
 
-    // Одиночный клик сразу вырезает этот квадрат в превью
     canvas.addEventListener("click", function() {
         pCtx.clearRect(0, 0, 64, 64);
         pCtx.drawImage(canvas, cropX, cropY, itemSize, itemSize, 0, 0, 64, 64);
