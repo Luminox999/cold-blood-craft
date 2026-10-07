@@ -6,7 +6,6 @@ var isLeader = false;
 var globalTargetCounts = {};
 var globalWarehouse = {};
 
-// Переключение окон (вкладок) интерфейса
 window.switchTab = function(tabId) {
     document.querySelectorAll('.tab-content').forEach(function(el) {
         el.style.display = 'none';
@@ -25,20 +24,20 @@ window.switchTab = function(tabId) {
     }
 };
 
-// Логика нажатия на кнопку "Войти в штаб"
 document.addEventListener("DOMContentLoaded", function() {
     const enterBtn = document.getElementById('btn-enter-room');
+    const passInputFields = document.getElementById('leader-pass-input');
     if (!enterBtn) return;
 
-    enterBtn.onclick = function() {
+    // Функция выполнения входа в штаб
+    function executeLogin() {
         const roomSelect = document.getElementById('room-input');
         const roomInput = roomSelect.options[roomSelect.selectedIndex].text;
-        const passInput = document.getElementById('leader-pass-input').value.trim();
+        const passInput = passInputFields.value.trim();
 
         currentRoom = roomSelect.value;
         document.getElementById('current-room-title').textContent = roomInput.toUpperCase();
         
-        // Временная простая авторизация лидера
         if (passInput === "свобода123") {
             isLeader = true;
             document.getElementById('leader-tab-nav').style.display = 'block';
@@ -50,10 +49,28 @@ document.addEventListener("DOMContentLoaded", function() {
 
         document.getElementById('auth-screen').style.display = 'none';
         
-        // Запуск фоновой синхронизации с облаком
+        // Пробуждаем модуль нарезчика иконок, чтобы он работал со скриншотами
+        if (typeof initSlicerInterface === 'function') {
+            initSlicerInterface();
+        }
+
+        // Запуск фоновой синхронизации склада
         if (typeof syncWithCloud === 'function') {
             syncWithCloud();
             setInterval(syncWithCloud, 3000);
         }
+    }
+
+    // Вход по клику мышки на кнопку
+    enterBtn.onclick = function() {
+        executeLogin();
     };
+
+    // Вход по нажатию клавиши Enter в поле ввода пароля
+    passInputFields.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            executeLogin();
+        }
+    });
 });
