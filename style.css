@@ -344,3 +344,24 @@ h1 {
     margin-bottom: 10px;
     align-items: center;
 }
+/* ======================================================== */
+/* 8. НАРЕЗЧИК: РИСОВАНИЕ РАМКИ МЫШКОЙ                      */
+/* ======================================================== */
+#screenshot-canvas {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: crosshair;
+}
+
+#crop-selector {
+    border: 2px dashed var(--orange-color);
+    background: rgba(255, 183, 77, 0.15);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    z-index: 2;
+}
+
+#slicer-status {
+    font-family: monospace;
+    padding: 4px 0;
+}
