@@ -78,7 +78,6 @@ h1 {
     z-index: 1000;
 }
 
-/* Центрирование элементов внутри окна авторизации */
 .auth-box {
     background: var(--panel-bg); 
     border: 1px solid var(--border-color);
@@ -87,17 +86,8 @@ h1 {
     width: 100%; 
     max-width: 400px; 
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
-/* Кнопка входа по центру */
-#btn-enter-room {
-    width: 100%;
-    max-width: 200px; /* Ограничиваем ширину, чтобы она не была огромной */
-    margin: 10px auto 0 auto;
-}
 .input-field, .select-field {
     width: 100%; 
     background: #2b2b2b; 
@@ -154,18 +144,44 @@ h1 {
     gap: 12px; 
 }
 
-/* Фиксированная рамка-заглушка для иконок, чтобы список не прыгал */
+/* Жесткая рамка игрового слота инвентаря */
 .item-icon { 
     width: 40px; 
     height: 40px; 
-    min-width: 40px; /* Не дает сжиматься, если текста много */
+    min-width: 40px; 
+    max-width: 40px;
     min-height: 40px;
+    max-height: 40px;
     object-fit: contain; 
-    background-color: rgba(0, 0, 0, 0.4); 
-    border: 1px solid var(--border-color); 
+    background-color: rgba(0, 0, 0, 0.5); 
+    border: 1px solid #333333; 
     border-radius: 4px; 
     display: inline-block;
+    vertical-align: middle;
 }
+
+/* Полностью скрываем значок битого файла, если картинка еще не нарезана */
+.item-icon:not([src]), .item-icon[src=""], .item-icon:-moz-broken, .item-icon:before {
+    opacity: 0;
+}
+
+/* Выравнивание текста в строках, чтобы верстка не дергалась */
+.item-meta { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    flex: 1;
+}
+
+.recipe-name, .mat-name {
+    font-weight: 500; 
+    font-size: 14px;
+    line-height: 40px; /* Высота строки равна высоте иконки для идеального центра */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 
 .recipe-name, .mat-name { 
     font-weight: 500; 

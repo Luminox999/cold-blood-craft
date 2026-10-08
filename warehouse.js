@@ -59,7 +59,7 @@ function renderMainDashboard() {
             
             var row = document.createElement("div");
             row.className = "recipe-item";
-            row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + item.image + '" onerror="this.style.display=\'none\'"><span class="recipe-name">' + item.name + '</span></div><span class="counter" style="color:#fff;">Приказ: ' + targetQty + ' шт</span>';
+            row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + item.image + '"><span class="recipe-name">' + item.name + '</span></div><span class="counter" style="color:#fff;">Приказ: ' + targetQty + ' шт</span>';
             ordersPanel.appendChild(row);
 
             for (var m in item.materials) {
@@ -97,7 +97,7 @@ function renderMainDashboard() {
             statusText = "Вне плана";
         }
 
-        row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + getMaterialImagePath(m) + '" onerror="this.style.display=\'none\'"><div class="mat-info"><span class="mat-name">' + m + '</span><span class="mat-needed-text">' + (reqQty > 0 ? "По плану требуется: " + reqQty : "План на этот хлам не задан") + '</span></div></div><div class="controls"><button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button><span class="counter" style="color:#ffb74d;">' + stockQty + '</span><button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button><span class="material-count">' + statusText + '</span></div>';
+        row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + getMaterialImagePath(m) + '"><div class="mat-info"><span class="mat-name">' + m + '</span><span class="mat-needed-text">' + (reqQty > 0 ? "По плану требуется: " + reqQty : "План на этот хлам не задан") + '</span></div></div><div class="controls"><button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button><span class="counter" style="color:#ffb74d;">' + stockQty + '</span><button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button><span class="material-count">' + statusText + '</span></div>';
         warehousePanel.appendChild(row);
     });
 }
@@ -112,14 +112,42 @@ window.changeWarehouseStock = function(matName, val) {
 
 function renderLeaderEditPanel() {
     var p = document.getElementById("leader-edit-list");
-    if (!p || p.children.length > 0) return;
+    if (!p) return;
 
+    var groupedCrafts = {};
     for (var k in craftData) {
-        var item = craftData[k];
-        var row = document.createElement("div");
-        row.className = "recipe-item";
-        row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + item.image + '" onerror="this.style.display=\'none\'"><span class="recipe-name">' + item.name + '</span></div><div class="controls"><button class="btn" onclick="changeLeaderTarget(\'' + k + '\', -1)">-</button><span class="counter" id="lead-cnt-' + k + '">0</span><button class="btn btn-plus" onclick="changeLeaderTarget(\'' + k + '\', 1)">+</button></div>';
-        p.appendChild(row);
+        var loc = craftData[k].location || "bar_bench";
+        if (!groupedCrafts[loc]) {
+            groupedCrafts[loc] = [];
+        }
+        groupedCrafts[loc].push(k);
+    }
+
+    p.innerHTML = "";
+    
+    for (var locKey in locationNames) {
+        if (groupedCrafts[locKey] && groupedCrafts[locKey].length > 0) {
+            var header = document.createElement("h3");
+            header.style.color = "#ffb74d";
+            header.style.borderBottom = "1px solid #333";
+            header.style.paddingBottom = "5px";
+            header.style.marginTop = "20px";
+            header.style.fontSize = "14px";
+            header.style.textTransform = "uppercase";
+            header.textContent = locationNames[locKey];
+            p.appendChild(header);
+
+            groupedCrafts[locKey].forEach(function(k) {
+                var item = craftData[k];
+                var row = document.createElement("div");
+                row.className = "recipe-item";
+                
+                var currentTargetVal = globalTargetCounts[k] || 0;
+                
+                row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + item.image + '"><span class="recipe-name">' + item.name + '</span></div><div class="controls"><button class="btn" onclick="changeLeaderTarget(\'' + k + '\', -1)">-</button><span class="counter" id="lead-cnt-' + k + '">' + currentTargetVal + '</span><button class="btn btn-plus" onclick="changeLeaderTarget(\'' + k + '\', 1)">+</button></div>';
+                p.appendChild(row);
+            });
+        }
     }
 }
 
