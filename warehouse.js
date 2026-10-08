@@ -46,22 +46,15 @@ function renderMainDashboard() {
     var warehousePanel = document.getElementById("global-warehouse-display");
     if (!ordersPanel || !warehousePanel) return;
     
-    ordersPanel.innerHTML = "";
-    warehousePanel.innerHTML = "";
     var hasOrders = false;
     var totalRequiredMaterials = {};
 
+    // 1. Подсчет необходимых материалов на основе приказов
     for (var k in craftData) {
         var targetQty = globalTargetCounts[k] || 0;
         if (targetQty > 0) {
             hasOrders = true;
             var item = craftData[k];
-            
-            var row = document.createElement("div");
-            row.className = "recipe-item";
-            row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + item.image + '"><span class="recipe-name">' + item.name + '</span></div><span class="counter" style="color:#fff;">Приказ: ' + targetQty + ' шт</span>';
-            ordersPanel.appendChild(row);
-
             for (var m in item.materials) {
                 if (!totalRequiredMaterials[m]) totalRequiredMaterials[m] = 0;
                 totalRequiredMaterials[m] += item.materials[m] * targetQty;
@@ -69,38 +62,83 @@ function renderMainDashboard() {
         }
     }
 
+    // 2. Умное обновление панели приказов лидера (без полной очистки innerHTML)
     if (!hasOrders) {
         ordersPanel.innerHTML = '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
+    } else {
+        // Создаем временный контейнер, чтобы собрать структуру один раз
+        var ordersHtml = "";
+        for (var k in craftData) {
+            var targetQty = globalTargetCounts[k] || 0;
+            if (targetQty > 0) {
+                var item = craftData[k];
+                ordersHtml += '<div class="recipe-item"><div class="item-meta"><img class="item-icon" src="' + item.image + '"><span class="recipe-name">' + item.name + '</span></div><span class="counter" style="color:#fff;">Приказ: ' + targetQty + ' шт</span></div>';
+            }
+        }
+        ordersPanel.innerHTML = ordersHtml;
     }
 
+    // 3. Собираем уникальный список хлама со всей игры
     var allPossibleMaterials = new Set();
     for (var k in craftData) {
         for (var m in craftData[k].materials) { allPossibleMaterials.add(m); }
     }
+    var sortedMats = Array.from(allPossibleMaterials).sort();
 
-    Array.from(allPossibleMaterials).sort().forEach(function(m) {
+    // 4. ТЕХНОЛОГИЯ ТОЧЕЧНОГО ОБНОВЛЕНИЯ (Проверяем, созданы ли уже строки склада)
+    var currentRows = warehousePanel.querySelectorAll(".material-item");
+    
+    if (currentRows.length !== sortedMats.length) {
+        // Если строк еще нет (первый запуск), строим каркас склада один раз
+        warehousePanel.innerHTML = "";
+        sortedMats.forEach(function(m) {
+            var row = document.createElement("div");
+            row.className = "material-item";
+            row.setAttribute("data-mat-name", m); // Привязываем метку хлама к строке
+            
+            row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + getMaterialImagePath(m) + '"><div class="mat-info"><span class="mat-name">' + m + '</span><span class="mat-needed-text" id="mat-req-text-' + m + '"></span></div></div><div class="controls"><button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button><span class="counter" style="color:#ffb74d;" id="mat-stock-cnt-' + m + '">0</span><button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button><span class="material-count" id="mat-status-text-' + m + '"></span></div>';
+            warehousePanel.appendChild(row);
+        });
+    }
+
+    // 5. Меняем только цифры и классы подсветки внутри живых строк
+    sortedMats.forEach(function(m) {
         var reqQty = totalRequiredMaterials[m] || 0;
         var stockQty = globalWarehouse[m] || 0;
         var left = reqQty - stockQty;
-        var row = document.createElement("div");
-        row.className = "material-item";
-        
-        var statusText = "";
-        if (reqQty > 0) {
-            if (left <= 0) {
-                row.classList.add("status-done");
-                statusText = "Готово!";
-            } else {
-                statusText = "Надо: x" + left;
-            }
-        } else {
-            statusText = "Вне плана";
-        }
 
-        row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + getMaterialImagePath(m) + '"><div class="mat-info"><span class="mat-name">' + m + '</span><span class="mat-needed-text">' + (reqQty > 0 ? "По плану требуется: " + reqQty : "План на этот хлам не задан") + '</span></div></div><div class="controls"><button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button><span class="counter" style="color:#ffb74d;">' + stockQty + '</span><button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button><span class="material-count">' + statusText + '</span></div>';
-        warehousePanel.appendChild(row);
+        var rowElement = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
+        var reqTxtElement = document.getElementById("mat-req-text-" + m);
+        var stockCntElement = document.getElementById("mat-stock-cnt-" + m);
+        var statusTxtElement = document.getElementById("mat-status-text-" + m);
+
+        if (rowElement && reqTxtElement && stockCntElement && statusTxtElement) {
+            // Обновляем текст плана снабжения
+            reqTxtElement.textContent = reqQty > 0 ? "По плану требуется: " + reqQty : "План на этот хлам не задан";
+            
+            // Обновляем текущее число на складе фракции
+            stockCntElement.textContent = stockQty;
+
+            // Пересчитываем статус и меняем подсветку строки без её перезагрузки
+            if (reqQty > 0) {
+                if (left <= 0) {
+                    rowElement.classList.add("status-done");
+                    statusTxtElement.textContent = "Готово!";
+                    statusTxtElement.style.color = "#81c784";
+                } else {
+                    rowElement.classList.remove("status-done");
+                    statusTxtElement.textContent = "Надо: x" + left;
+                    statusTxtElement.style.color = "var(--orange-color)";
+                }
+            } else {
+                rowElement.classList.remove("status-done");
+                statusTxtElement.textContent = "Вне плана";
+                statusTxtElement.style.color = "#888";
+            }
+        }
     });
 }
+
 
 window.changeWarehouseStock = function(matName, val) {
     var current = globalWarehouse[matName] || 0;
