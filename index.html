@@ -46,7 +46,7 @@
         <button class="tab-btn" style="background:#555; color:#fff; margin-left:auto;" onclick="location.reload()">Выйти</button>
     </div>
 
-    <!-- ВКЛАДКА 1 -->
+       <!-- ВКЛАДКА 1: СКЛАД И ЗАДАЧИ -->
     <div id="main-tab" class="container tab-content">
         <div class="panel">
             <div class="result-title">Текущий приказ лидера фракции</div>
@@ -56,11 +56,13 @@
         </div>
         <div class="panel">
             <div class="result-title">Общий склад хлама группировки</div>
-            <div class="material-list" id="global-warehouse-display">
-                <div class="empty-message">Задачи отсутствуют, склад пуст.</div>
+            <!-- Добавлен фиксированный контейнер, чтобы верстка стояла как вкопанная -->
+            <div class="material-list" id="global-warehouse-display" style="min-height: 200px;">
+                <div class="empty-message">Загрузка склада снабжения...</div>
             </div>
         </div>
     </div>
+
 
     <!-- ВКЛАДКА 2 -->
     <div id="leader-tab" class="container tab-content" style="display: none;">
