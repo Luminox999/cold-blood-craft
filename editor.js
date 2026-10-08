@@ -1,22 +1,22 @@
 function getAllUniqueMaterials() {
+    if (typeof craftData === 'undefined') return [];
     var mats = new Set();
     for (var k in craftData) {
-        for (var m in craftData[k].materials) {
-            mats.add(m);
-        }
+        if (!craftData[k].materials) continue;
+        for (var m in craftData[k].materials) mats.add(m);
     }
     return Array.from(mats).sort();
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     var btnAddRow = document.getElementById("btn-add-ingredient-row");
     if (btnAddRow) {
-        btnAddRow.onclick = function() {
+        btnAddRow.onclick = function () {
             addIngredientRowConstructor();
         };
     }
-    
-    setTimeout(function() {
+
+    setTimeout(function () {
         var container = document.getElementById("ingredients-constructor-container");
         if (container && container.children.length === 0) {
             addIngredientRowConstructor();
@@ -30,10 +30,6 @@ function addIngredientRowConstructor() {
 
     var row = document.createElement("div");
     row.className = "ingredients-constructor-row";
-    row.style.display = "flex";
-    row.style.gap = "8px";
-    row.style.marginBottom = "10px";
-    row.style.alignItems = "center";
 
     var select = document.createElement("select");
     select.className = "select-field";
@@ -41,7 +37,7 @@ function addIngredientRowConstructor() {
     select.style.flex = "1";
 
     var allMats = getAllUniqueMaterials();
-    allMats.forEach(function(mat) {
+    allMats.forEach(function (mat) {
         var opt = document.createElement("option");
         opt.value = mat;
         opt.textContent = mat;
@@ -60,12 +56,8 @@ function addIngredientRowConstructor() {
     btnDel.type = "button";
     btnDel.className = "btn";
     btnDel.style.background = "#b71c1c";
-    btnDel.style.width = "32px";
-    btnDel.style.height = "32px";
     btnDel.textContent = "x";
-    btnDel.onclick = function() {
-        row.remove();
-    };
+    btnDel.onclick = function () { row.remove(); };
 
     row.appendChild(select);
     row.appendChild(input);
@@ -73,10 +65,10 @@ function addIngredientRowConstructor() {
     container.appendChild(row);
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     var btnSave = document.getElementById("btn-save-new-craft");
     if (btnSave) {
-        btnSave.onclick = function() {
+        btnSave.onclick = function () {
             saveNewCraftFromConstructor();
         };
     }
@@ -151,22 +143,22 @@ function saveNewCraftFromConstructor() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCraftObject)
     })
-    .then(function(res) {
-        if (!res.ok) throw new Error("Ошибка сервера");
-        return res.json();
-    })
-    .then(function() {
-        alert("Рецепт '" + craftName + "' успешно добавлен в базу верстаков!");
-        nameInput.value = "";
-        container.innerHTML = "";
-        addIngredientRowConstructor();
-        
-        var editList = document.getElementById("leader-edit-list");
-        if (editList) editList.innerHTML = "";
-        renderLeaderEditPanel();
-        syncWithCloud();
-    })
-    .catch(function(err) {
-        alert("Не удалось сохранить рецепт в облако: " + err.message);
-    });
+        .then(function (res) {
+            if (!res.ok) throw new Error("Ошибка сервера");
+            return res.json();
+        })
+        .then(function () {
+            alert("Рецепт '" + craftName + "' успешно добавлен в базу верстаков!");
+            nameInput.value = "";
+            container.innerHTML = "";
+            addIngredientRowConstructor();
+
+            var editList = document.getElementById("leader-edit-list");
+            if (editList) editList.innerHTML = "";
+            renderLeaderEditPanel();
+            syncWithCloud();
+        })
+        .catch(function (err) {
+            alert("Не удалось сохранить рецепт в облако: " + err.message);
+        });
 }

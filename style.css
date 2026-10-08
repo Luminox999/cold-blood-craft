@@ -22,43 +22,41 @@ body {
     align-items: center;
 }
 
-h1 { 
-    color: #ffffff; 
-    margin-bottom: 5px; 
-    font-size: 24px; 
-    text-transform: uppercase; 
-    letter-spacing: 1px; 
+h1 {
+    color: #ffffff;
+    margin-bottom: 5px;
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.server-sub { 
-    color: #888; 
-    font-size: 14px; 
-    margin-bottom: 25px; 
+.server-sub {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 25px;
 }
 
 /* ======================================================== */
-/* 2. БЛОКИ ОКНА АВТОРИЗАЦИИ (ВХОД В ШТАБ)                 */
+/* 2. ОКНО АВТОРИЗАЦИИ                                      */
 /* ======================================================== */
-.auth-overlay { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%;
-    background: rgba(10,10,10,0.95); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
+.auth-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(10,10,10,0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1000;
 }
 
 .auth-box {
-    background: var(--panel-bg); 
+    background: var(--panel-bg);
     border: 1px solid var(--border-color);
-    padding: 30px; 
-    border-radius: 8px; 
-    width: 100%; 
-    max-width: 400px; 
+    padding: 30px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -72,274 +70,277 @@ h1 {
 }
 
 /* ======================================================== */
-/* 3. НАВИГАЦИЯ, ВКЛАДКИ И ОБЩИЕ ПАНЕЛИ                     */
+/* 3. ПАНЕЛИ, ВКЛАДКИ, КОНТЕЙНЕРЫ                           */
 /* ======================================================== */
 .container {
-    display: flex; 
-    gap: 20px; 
-    width: 100%; 
-    max-width: 1100px; 
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
     flex-wrap: wrap;
 }
 
 .panel {
-    background-color: var(--panel-bg); 
+    background-color: var(--panel-bg);
     border: 1px solid var(--border-color);
-    border-radius: 6px; 
-    padding: 20px; 
-    flex: 1; 
+    border-radius: 6px;
+    padding: 20px;
+    flex: 1;
     min-width: 340px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
 .result-title {
-    border-bottom: 2px solid var(--accent-color); 
+    border-bottom: 2px solid var(--accent-color);
     padding-bottom: 10px;
-    margin-top: 0; 
-    margin-bottom: 15px; 
-    font-size: 16px; 
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
     text-transform: uppercase;
-    letter-spacing: 0.5px; 
-    color: #ffffff; 
-    display: flex; 
-    justify-content: space-between; 
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
 }
 
-.tabs { 
-    display: flex; 
-    gap: 10px; 
-    margin-bottom: 20px; 
-    width: 100%; 
-    max-width: 1100px; 
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 1100px;
 }
 
 .tab-btn {
-    background: #252525; 
-    color: #aaa; 
+    background: #252525;
+    color: #aaa;
     border: 1px solid var(--border-color);
-    padding: 10px 20px; 
-    cursor: pointer; 
-    border-radius: 4px; 
-    font-weight: 600; 
-    text-transform: uppercase; 
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
     font-size: 12px;
 }
 
-.tab-btn.active { 
-    background: var(--accent-color); 
-    color: #fff; 
-    border-color: var(--accent-color); 
+.tab-btn.active {
+    background: var(--accent-color);
+    color: #fff;
+    border-color: var(--accent-color);
 }
 
 /* ======================================================== */
-/* 4. КНОПКИ, ПОЛЯ ВВОДА И СЧЁТЧИКИ                        */
+/* 4. ПОЛЯ ВВОДА, КНОПКИ, СЧЁТЧИКИ                          */
 /* ======================================================== */
 .input-field, .select-field {
-    width: 100%; 
-    background: #2b2b2b; 
+    width: 100%;
+    background: #2b2b2b;
     border: 1px solid var(--border-color);
-    padding: 10px; 
-    color: #fff; 
-    border-radius: 4px; 
+    padding: 10px;
+    color: #fff;
+    border-radius: 4px;
     margin-bottom: 15px;
-    box-sizing: border-box; 
-    font-size: 14px; 
+    box-sizing: border-box;
+    font-size: 14px;
     cursor: pointer;
 }
 
 .btn {
-    background-color: #3a3a3a; 
-    color: #ffffff; 
-    border: none; 
-    width: 32px; 
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: none;
+    width: 32px;
     height: 32px;
-    cursor: pointer; 
-    font-weight: bold; 
-    font-size: 16px; 
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
     border-radius: 4px;
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
     user-select: none;
 }
 
-.btn:hover { 
-    background-color: #4a4a4a; 
+.btn:hover { background-color: #4a4a4a; }
+.btn-plus { background-color: var(--accent-color); }
+.btn-plus:hover { background-color: var(--accent-hover); }
+
+.counter {
+    min-width: 25px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
 }
 
-.btn-plus { 
-    background-color: var(--accent-color); 
-}
-
-.btn-plus:hover { 
-    background-color: var(--accent-hover); 
-}
-
-.counter { 
-    min-width: 25px; 
-    text-align: center; 
-    font-weight: bold; 
-    font-size: 15px; 
-}
-
-.material-count { 
-    color: var(--orange-color); 
-    font-weight: bold; 
-    margin-left: 10px; 
+.material-count {
+    color: var(--orange-color);
+    font-weight: bold;
+    margin-left: 10px;
 }
 
 /* ======================================================== */
-/* 5. ЯЧЕЙКИ И ТЕКСТ ТАБЛИЦ СНАБЖЕНИЯ И СКЛАДА             */
+/* 5. СТРОКИ СКЛАДА И ПРИКАЗОВ (исправлено)                 */
 /* ======================================================== */
 .recipe-item, .material-item {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 12px;
-    background-color: rgba(255,255,255,0.02); 
-    border: 1px solid rgba(255,255,255,0.05); 
-    border-radius: 4px; 
+    background-color: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 4px;
     margin-bottom: 10px;
 }
 
-.item-meta { 
-    display: flex; 
-    align-items: center; 
-    gap: 12px; 
+.item-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     flex: 1;
+    min-width: 0;
+    min-height: 40px;
+}
+
+.item-icon {
+    width: 40px;
     height: 40px;
-    max-height: 40px;
-    overflow: hidden;
-}
-
-.item-icon { 
-    width: 40px !important; 
-    height: 40px !important; 
-    min-width: 40px !important; 
-    max-width: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-    object-fit: contain; 
-    background-color: #151515 !important; 
-    border: 1px solid #333333 !important; 
-    border-radius: 4px; 
+    min-width: 40px;
+    flex-shrink: 0;
+    object-fit: contain;
+    background-color: #151515;
+    border: 1px solid #333333;
+    border-radius: 4px;
     display: inline-block;
-    vertical-align: middle;
 }
 
-.item-icon:not([src]), .item-icon[src=""], .item-icon[src="null"], .item-icon:-moz-broken {
-    color: transparent;
-    text-indent: -9999px;
-}
-
-.recipe-name, .mat-name {
-    font-weight: 500; 
+.recipe-name {
+    font-weight: 500;
     font-size: 14px;
-    line-height: 40px;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin: 0;
-    padding: 0;
+    min-width: 0;
 }
 
-.mat-info { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 4px; 
+.mat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
 }
 
-.mat-needed-text { 
-    font-size: 11px; 
-    color: #aaa; 
+.mat-name {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.controls { 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
+.mat-needed-text {
+    font-size: 11px;
+    color: #aaa;
+    line-height: 1.2;
 }
 
-.status-done { 
-    background-color: rgba(46, 125, 40, 0.15); 
-    border-color: rgba(46, 125, 40, 0.3); 
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
-.status-done .material-count { 
-    color: #81c784; 
+.status-done {
+    background-color: rgba(46, 125, 40, 0.15);
+    border-color: rgba(46, 125, 40, 0.3);
 }
 
-.leader-badge { 
-    background: #b71c1c; 
-    color: #fff; 
-    font-size: 10px; 
-    padding: 2px 6px; 
-    border-radius: 3px; 
-    font-weight: bold; 
+.status-done .material-count { color: #81c784; }
+
+.leader-badge {
+    background: #b71c1c;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
 }
 
-.empty-message { 
-    color: #777777; 
-    font-style: italic; 
-    text-align: center; 
-    padding: 20px; 
-    font-size: 14px; 
+.empty-message {
+    color: #777777;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
 }
 
 /* ======================================================== */
-/* 6. МОДУЛЬ ИНТЕРАКТИВНОГО НАРЕЗЧИКА ИКОНОК                */
+/* 6. НАРЕЗЧИК ИКОНОК                                       */
 /* ======================================================== */
-.slicer-workspace { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    margin-top: 15px; 
+.slicer-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
 }
 
-.canvas-container { 
-    position: relative; 
-    border: 2px solid #444; 
-    background: #000; 
-    overflow: auto; 
-    max-height: 400px; 
+.canvas-container {
+    position: relative;
+    border: 2px solid #444;
+    background: #000;
+    overflow: auto;
+    max-height: 400px;
 }
 
-#screenshot-canvas { 
-    display: block; 
-    cursor: crosshair; 
+#screenshot-canvas {
+    display: block;
+    cursor: crosshair;
 }
 
-#crop-selector { 
-    position: absolute; 
-    border: 2px dashed var(--orange-color); 
-    background: rgba(255,183,77,0.2); 
-    display: none; 
-    pointer-events: none; 
+#crop-selector {
+    position: absolute;
+    border: 2px dashed var(--orange-color);
+    background: rgba(255,183,77,0.2);
+    display: none;
+    pointer-events: none;
 }
 
-.slicer-controls-row { 
-    display: flex; 
-    gap: 15px; 
-    align-items: center; 
-    flex-wrap: wrap; 
-    background: rgba(0,0,0,0.4); 
-    padding: 15px; 
-    border-radius: 4px; 
+.slicer-controls-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: rgba(0,0,0,0.4);
+    padding: 15px;
+    border-radius: 4px;
     margin-top: 10px;
 }
 
-.slicer-select { 
-    background: #2b2b2b; 
-    color: #fff; 
-    border: 1px solid var(--border-color); 
-    padding: 8px; 
-    border-radius: 4px; 
-    min-width: 200px; 
+.slicer-select {
+    background: #2b2b2b;
+    color: #fff;
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    border-radius: 4px;
+    min-width: 200px;
 }
 
-#preview-canvas { 
-    background-color: rgba(0,0,0,0.5); 
-    border: 1px solid var(--orange-color); 
-    border-radius: 4px; 
+#preview-canvas {
+    background-color: rgba(0,0,0,0.5);
+    border: 1px solid var(--orange-color);
+    border-radius: 4px;
+}
+
+/* ======================================================== */
+/* 7. КОНСТРУКТОР ИНГРЕДИЕНТОВ                              */
+/* ======================================================== */
+.ingredients-constructor-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
 }

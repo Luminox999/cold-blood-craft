@@ -3,7 +3,20 @@ function initSlicerInterface() {
     var outputZone = document.getElementById("cropper-zone");
     if (!fileInput || !outputZone) return;
 
-    outputZone.innerHTML = '<div class="slicer-workspace"><p style="font-size: 13px; color: #ffb74d; margin: 0;">Наведите рамку на нужный предмет на скриншоте и кликните левой кнопкой мыши для захвата.</p><div class="canvas-container"><canvas id="screenshot-canvas"></canvas><div id="crop-selector"></div></div><div class="slicer-controls-row"><canvas id="preview-canvas" width="64" height="64"></canvas><select id="material-selector" class="slicer-select"></select><button id="btn-download-crop" class="btn btn-plus" style="width: auto; padding: 0 25px; height: 40px; font-size: 14px;">Скачать иконку</button></div></div>';
+    outputZone.innerHTML = '<div class="slicer-workspace">'
+        + '<p style="font-size: 13px; color: #ffb74d; margin: 0;">'
+        + 'Загрузите скриншот, зажмите левую кнопку мыши и растяните рамку вокруг нужной иконки. '
+        + 'Рамка автоматически сожмётся в 64×64, и её можно будет загрузить в облако для всех фракций.'
+        + '</p>'
+        + '<div class="canvas-container"><canvas id="screenshot-canvas"></canvas><div id="crop-selector"></div></div>'
+        + '<div class="slicer-controls-row">'
+        + '<canvas id="preview-canvas" width="64" height="64"></canvas>'
+        + '<select id="material-selector" class="slicer-select"></select>'
+        + '<button id="btn-upload-icon" class="btn btn-plus" style="width: auto; padding: 0 25px; height: 40px; font-size: 14px;">📤 Загрузить в облако</button>'
+        + '<button id="btn-download-crop" class="btn" style="width: auto; padding: 0 15px; height: 40px; font-size: 12px; background:#3a3a3a;">💾 Скачать PNG</button>'
+        + '</div>'
+        + '<div id="slicer-status" style="font-size:12px; color:#81c784; min-height: 18px;"></div>'
+        + '</div>';
 
     var canvas = document.getElementById("screenshot-canvas");
     var ctx = canvas.getContext("2d");
@@ -11,80 +24,247 @@ function initSlicerInterface() {
     var previewCanvas = document.getElementById("preview-canvas");
     var pCtx = previewCanvas.getContext("2d");
     var selectEl = document.getElementById("material-selector");
+    var btnUpload = document.getElementById("btn-upload-icon");
     var btnDownload = document.getElementById("btn-download-crop");
+    var statusEl = document.getElementById("slicer-status");
 
-    let img = new Image();
-    // Фиксированный размер игровой иконки
-    var itemSize = 64; 
-    var cropX = 0, cropY = 0;
+    var img = new Image();
+    var isDragging = false;
+    var selStart = null;
+    var selEnd = null;
 
-    // Устанавливаем фиксированные размеры для рамки выбора в стилях
-    selector.style.width = itemSize + "px";
-    selector.style.height = itemSize + "px";
+    // Заполняем выпадающий список: сначала предметы (для верстака), потом материалы
+    if (typeof craftData !== 'undefined') {
+        var itemGroup = document.createElement("optgroup");
+        itemGroup.label = "Предметы (верстак)";
+        for (var key in craftData) {
+            var opt = document.createElement("option");
+            opt.value = "item:" + key;
+            opt.textContent = craftData[key].name;
+            itemGroup.appendChild(opt);
+        }
+        selectEl.appendChild(itemGroup);
 
-    var allMaterials = new Set();
-    for (let key in craftData) {
-        allMaterials.add(craftData[key].name);
-        for (let mat in craftData[key].materials) { allMaterials.add(mat); }
+        var matGroup = document.createElement("optgroup");
+        matGroup.label = "Материалы (хлам)";
+        var matSet = new Set();
+        for (var k in craftData) {
+            for (var m in craftData[k].materials) matSet.add(m);
+        }
+        Array.from(matSet).sort().forEach(function (mat) {
+            var opt = document.createElement("option");
+            opt.value = "mat:" + mat;
+            opt.textContent = mat;
+            matGroup.appendChild(opt);
+        });
+        selectEl.appendChild(matGroup);
     }
-    Array.from(allMaterials).sort().forEach(function(mat) {
-        var opt = document.createElement("option");
-        opt.value = mat; opt.textContent = mat; selectEl.appendChild(opt);
-    });
 
-    fileInput.addEventListener("change", function(e) {
+    // ==== Загрузка файла ====
+    fileInput.addEventListener("change", function (e) {
+        if (!e.target.files || e.target.files.length === 0) return;
         var reader = new FileReader();
-        reader.onload = function(ev) {
-            img.onload = function() {
-                canvas.width = img.width; canvas.height = img.height;
-                ctx.drawImage(img, 0, 0); outputZone.style.display = "block";
-                selector.style.display = "none"; pCtx.clearRect(0, 0, 64, 64);
+        reader.onload = function (ev) {
+            img.onload = function () {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                outputZone.style.display = "block";
+
+                // Сброс выделения
+                selector.style.display = "none";
+                selStart = null;
+                selEnd = null;
+                pCtx.clearRect(0, 0, 64, 64);
+                statusEl.textContent = "";
             };
             img.src = ev.target.result;
         };
-        reader.readAsDataURL(e.target.files);
+        reader.readAsDataURL(e.target.files[0]);
     });
 
-    // Рамка просто следует за мышкой по скриншоту
-    canvas.addEventListener("mousemove", function(e) {
+    // ==== Хелперы ====
+    function getCanvasPoint(e) {
         var rect = canvas.getBoundingClientRect();
         var scaleX = canvas.width / rect.width;
         var scaleY = canvas.height / rect.height;
+        return {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY
+        };
+    }
 
-        // Центрируем фиксированную рамку вокруг курсора мыши
-        var mouseX = (e.clientX - rect.left) * scaleX;
-        var mouseY = (e.clientY - rect.top) * scaleY;
+    function getSelectionRect() {
+        if (!selStart || !selEnd) return null;
+        var x1 = Math.min(selStart.x, selEnd.x);
+        var y1 = Math.min(selStart.y, selEnd.y);
+        var x2 = Math.max(selStart.x, selEnd.x);
+        var y2 = Math.max(selStart.y, selEnd.y);
 
-        cropX = Math.round(mouseX - itemSize / 2);
-        cropY = Math.round(mouseY - itemSize / 2);
+        // Обрезаем по границам холста
+        if (x1 < 0) x1 = 0;
+        if (y1 < 0) y1 = 0;
+        if (x2 > canvas.width) x2 = canvas.width;
+        if (y2 > canvas.height) y2 = canvas.height;
 
-        // Держим рамку в границах картинки скриншота
-        if (cropX < 0) cropX = 0;
-        if (cropY < 0) cropY = 0;
-        if (cropX + itemSize > canvas.width) cropX = canvas.width - itemSize;
-        if (cropY + itemSize > canvas.height) cropY = canvas.height - itemSize;
+        return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+    }
 
-        selector.style.left = (cropX / scaleX) + "px";
-        selector.style.top = (cropY / scaleY) + "px";
+    function drawSelector() {
+        var r = getSelectionRect();
+        if (!r) { selector.style.display = "none"; return; }
+        var cssRect = canvas.getBoundingClientRect();
+        var cssScaleX = cssRect.width / canvas.width;
+        var cssScaleY = cssRect.height / canvas.height;
+
+        selector.style.left = (r.x * cssScaleX) + "px";
+        selector.style.top = (r.y * cssScaleY) + "px";
+        selector.style.width = (r.w * cssScaleX) + "px";
+        selector.style.height = (r.h * cssScaleY) + "px";
         selector.style.display = "block";
-    });
+    }
 
-    // Одиночный клик сразу вырезает этот квадрат в превью
-    canvas.addEventListener("click", function() {
+    function updatePreview() {
+        var r = getSelectionRect();
+        if (!r || r.w < 4 || r.h < 4) {
+            pCtx.clearRect(0, 0, 64, 64);
+            return;
+        }
         pCtx.clearRect(0, 0, 64, 64);
-        pCtx.drawImage(canvas, cropX, cropY, itemSize, itemSize, 0, 0, 64, 64);
+        pCtx.imageSmoothingEnabled = true;
+        pCtx.imageSmoothingQuality = "high";
+        pCtx.drawImage(canvas, r.x, r.y, r.w, r.h, 0, 0, 64, 64);
+    }
+
+    // ==== Рисование рамки мышкой ====
+    canvas.addEventListener("mousedown", function (e) {
+        if (e.button !== 0) return;
+        var pt = getCanvasPoint(e);
+        selStart = pt;
+        selEnd = pt;
+        isDragging = true;
+        selector.style.display = "none";
+        statusEl.textContent = "";
+        e.preventDefault();
     });
 
-    btnDownload.onclick = function() {
-        var targetName = selectEl.value;
-        var foundKey = Object.keys(craftData).find(function(k) { return craftData[k].name === targetName; });
-        var fn = foundKey ? foundKey + ".png" : targetName.toLowerCase().replace(/[^a-zа-я0-9\s]/g, "").trim().replace(/\s+/g, "_") + ".png";
+    canvas.addEventListener("mousemove", function (e) {
+        if (!isDragging) return;
+        selEnd = getCanvasPoint(e);
+        drawSelector();
+    });
 
-        var saveCanvas = document.createElement("canvas");
-        saveCanvas.width = 64; saveCanvas.height = 64;
-        saveCanvas.getContext("2d").drawImage(canvas, cropX, cropY, itemSize, itemSize, 0, 0, 64, 64);
+    document.addEventListener("mouseup", function () {
+        if (!isDragging) return;
+        isDragging = false;
+        var r = getSelectionRect();
+        if (!r || r.w < 4 || r.h < 4) {
+            selector.style.display = "none";
+            selStart = null;
+            selEnd = null;
+            pCtx.clearRect(0, 0, 64, 64);
+            return;
+        }
+        updatePreview();
+    });
+
+    // ==== Экспорт выделенной области в 64×64 ====
+    function exportTo64() {
+        var r = getSelectionRect();
+        if (!r || r.w < 4 || r.h < 4) return null;
+        var exportCanvas = document.createElement("canvas");
+        exportCanvas.width = 64;
+        exportCanvas.height = 64;
+        var ectx = exportCanvas.getContext("2d");
+        ectx.imageSmoothingEnabled = true;
+        ectx.imageSmoothingQuality = "high";
+        ectx.drawImage(canvas, r.x, r.y, r.w, r.h, 0, 0, 64, 64);
+        return exportCanvas;
+    }
+
+    // ==== Загрузка в Firebase ====
+    btnUpload.onclick = function () {
+        if (!isLeader) {
+            alert("Загружать иконки в общее облако может только Лидер фракции или Администратор.");
+            return;
+        }
+
+        var selected = selectEl.value;
+        if (!selected) {
+            alert("Выберите предмет или материал из списка справа.");
+            return;
+        }
+
+        var r = getSelectionRect();
+        if (!r || r.w < 4 || r.h < 4) {
+            alert("Сначала выделите мышкой область на скриншоте.");
+            return;
+        }
+
+        var exp = exportTo64();
+        if (!exp) return;
+        var dataUrl = exp.toDataURL("image/png");
+
+        // Разбираем значение: "item:sr25" или "mat:Медный слиток"
+        var parts = selected.split(":");
+        var kind = parts[0];
+        var name = parts.slice(1).join(":");
+
+        var path;
+        if (kind === "item") {
+            path = "/icons/items/" + encodeURIComponent(name) + ".json";
+        } else {
+            path = "/icons/materials/" + encodeURIComponent(name) + ".json";
+        }
+
+        statusEl.style.color = "#ffb74d";
+        statusEl.textContent = "Отправка в облако...";
+
+        fetch(FIREBASE_URL + path, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataUrl)
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json();
+            })
+            .then(function () {
+                // Обновляем локальный кэш и перерисовываем всё
+                if (kind === "item") {
+                    globalIcons.items[name] = dataUrl;
+                } else {
+                    globalIcons.materials[name] = dataUrl;
+                }
+
+                statusEl.style.color = "#81c784";
+                statusEl.textContent = "✓ Иконка загружена в облако. Её увидят все фракции после обновления страницы.";
+
+                if (typeof renderMainDashboard === 'function') renderMainDashboard();
+                if (typeof renderLeaderEditPanel === 'function') renderLeaderEditPanel();
+            })
+            .catch(function (err) {
+                statusEl.style.color = "#ff5252";
+                statusEl.textContent = "✗ Ошибка: " + err.message;
+            });
+    };
+
+    // ==== Скачивание в PNG (на всякий случай оставил) ====
+    btnDownload.onclick = function () {
+        var exp = exportTo64();
+        if (!exp) {
+            alert("Сначала выделите область мышкой.");
+            return;
+        }
+        var selected = selectEl.value || "";
+        var parts = selected.split(":");
+        var kind = parts[0];
+        var name = parts.slice(1).join(":");
+        var fileName = name ? name + ".png" : "icon.png";
 
         var link = document.createElement("a");
-        link.download = fn; link.href = saveCanvas.toDataURL("image/png"); link.click();
+        link.download = fileName;
+        link.href = exp.toDataURL("image/png");
+        link.click();
     };
 }
