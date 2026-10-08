@@ -373,3 +373,12 @@ h1 {
     width: 70px;
     margin-bottom: 0;
 }
+/* Красная кнопка опасного действия */
+.btn-danger {
+    background-color: #b71c1c;
+    color: #fff;
+    font-size: 14px;
+}
+.btn-danger:hover {
+    background-color: #d32f2f;
+}
