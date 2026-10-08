@@ -53,7 +53,6 @@ function renderMainDashboard() {
     var hasOrders = false;
     var totalRequiredMaterials = {};
 
-    // 1. Рассчитываем суммарные потребности на основе приказов
     for (var k in craftData) {
         var targetQty = globalTargetCounts[k] || 0;
         if (targetQty > 0) {
@@ -66,7 +65,6 @@ function renderMainDashboard() {
         }
     }
 
-    // 2. Статичное обновление панели приказов лидера
     if (!hasOrders) {
         ordersPanel.innerHTML = '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
     } else {
@@ -87,14 +85,12 @@ function renderMainDashboard() {
         }
     }
 
-    // 3. Собираем уникальный список хлама со всей игры
     var allPossibleMaterials = new Set();
     for (var k in craftData) {
         for (var m in craftData[k].materials) { allPossibleMaterials.add(m); }
     }
     var sortedMats = Array.from(allPossibleMaterials).sort();
 
-    // 4. ТЕХНОЛОГИЯ ЗАМОРОЗКИ СЛОТОВ (Строим каркас ячеек строго один раз в жизни)
     var currentRows = warehousePanel.querySelectorAll(".material-item");
     if (currentRows.length !== sortedMats.length) {
         warehousePanel.innerHTML = "";
@@ -103,13 +99,11 @@ function renderMainDashboard() {
             row.className = "material-item";
             row.setAttribute("data-mat-name", m);
             
-            // Вшиваем пути картинок один раз. Сюда обновление больше никогда не залезет!
             row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + getMaterialImagePath(m) + '"><div class="mat-info"><span class="mat-name">' + m + '</span><span class="mat-needed-text" id="mat-req-text-' + m + '">План на этот хлам не задан</span></div></div><div class="controls"><button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button><span class="counter" style="color:#ffb74d;" id="mat-stock-cnt-' + m + '">0</span><button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button><span class="material-count" id="mat-status-text-' + m + '">Вне плана</span></div>';
             warehousePanel.appendChild(row);
         });
     }
 
-    // 5. ТОЧЕЧНОЕ ОБНОВЛЕНИЕ ТЕКСТА И ЦИФР СНАБЖЕНИЯ
     sortedMats.forEach(function(m) {
         var reqQty = totalRequiredMaterials[m] || 0;
         var stockQty = globalWarehouse[m] || 0;
@@ -120,8 +114,8 @@ function renderMainDashboard() {
         var stockCntElement = document.getElementById("mat-stock-cnt-" + m);
         var statusTxtElement = document.getElementById("mat-status-text-" + m);
 
+        // Защитная проверка: обновляем только если ВСЕ элементы строки созданы в DOM
         if (rowElement && reqTxtElement && stockCntElement && statusTxtElement) {
-            // Возвращаем подписи планов снабжения на экран
             reqTxtElement.textContent = reqQty > 0 ? "По плану требуется: " + reqQty : "План на этот хлам не задан";
             stockCntElement.textContent = stockQty;
 
