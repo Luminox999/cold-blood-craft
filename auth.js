@@ -1,5 +1,5 @@
 // В кавычках ниже вместо метки вставьте адрес вашей базы данных Firebase:
-const FIREBASE_URL = "https://cold-blood-calc-default-rtdb.europe-west1.firebasedatabase.app/";
+const FIREBASE_URL = "https://cold-blood-calc-default-rtdb.europe-west1.firebasedatabase.app";
 
 var currentRoom = "";
 var isLeader = false;
