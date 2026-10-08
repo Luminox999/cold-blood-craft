@@ -1,4 +1,20 @@
-// Санитайзер ключей Firebase (запрещены . # $ / [ ])
+// ============================================================
+// 0. ГЛОБАЛЬНОЕ СОСТОЯНИЕ
+// ============================================================
+var hiddenRecipes = {};       // {key: true} — рецепты, скрытые ЭТОЙ фракцией
+var globalIcons = { items: {}, materials: {} };
+
+// Снимок базовых ключей из craftdata.js — чтобы отличать их от кастомных
+var baseRecipeKeys = [];
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof craftData !== 'undefined') {
+        baseRecipeKeys = Object.keys(craftData);
+    }
+});
+
+// ============================================================
+// 1. УТИЛИТЫ FIREBASE
+// ============================================================
 function sanitizeFirebaseKey(key) {
     return String(key).replace(/[.#$\/\[\]]/g, "_");
 }
@@ -12,10 +28,17 @@ function sanitizeFirebasePayload(obj) {
     return result;
 }
 
-// ============ ИКОНКИ ИЗ ОБЛАКА ============
-// Глобальные иконки, общие для всех фракций
-var globalIcons = { items: {}, materials: {} };
+function isRecipeHidden(key) {
+    return !!hiddenRecipes[key];
+}
 
+function isCustomRecipe(key) {
+    return baseRecipeKeys.indexOf(key) === -1;
+}
+
+// ============================================================
+// 2. ИКОНКИ ИЗ ОБЛАКА
+// ============================================================
 function syncIconsFromCloud() {
     fetch(FIREBASE_URL + "/icons.json?nocache=" + Date.now(), {
         method: "GET",
@@ -26,8 +49,6 @@ function syncIconsFromCloud() {
             var safe = data || {};
             globalIcons.items = safe.items || {};
             globalIcons.materials = safe.materials || {};
-
-            // Перерисовываем всё после получения иконок
             if (typeof renderMainDashboard === 'function') renderMainDashboard();
             if (typeof renderLeaderEditPanel === 'function') renderLeaderEditPanel();
         })
@@ -36,7 +57,6 @@ function syncIconsFromCloud() {
         });
 }
 
-// Возвращает src иконки: сначала ищет в облаке, потом локальный файл
 function getItemIconSrc(craftKey, item) {
     return globalIcons.items[craftKey] || item.image;
 }
@@ -45,7 +65,14 @@ function getMaterialIconSrc(matName) {
     return globalIcons.materials[matName] || getMaterialImagePath(matName);
 }
 
-// ============ СКЛАД И ПРИКАЗЫ ============
+function getMaterialImagePath(name) {
+    var slug = name.toLowerCase().replace(/[^a-zа-я0-9\s]/g, "").trim().replace(/\s+/g, "_");
+    return "img/" + slug + ".png";
+}
+
+// ============================================================
+// 3. СИНХРОНИЗАЦИЯ С ОБЛАКОМ
+// ============================================================
 function syncWithCloud() {
     if (!currentRoom) return;
 
@@ -58,6 +85,7 @@ function syncWithCloud() {
             var safeData = data || {};
             globalTargetCounts = safeData.targets || {};
             globalWarehouse = safeData.warehouse || {};
+            hiddenRecipes = safeData.hidden_recipes || {};
 
             if (safeData.custom_recipes) {
                 for (var key in safeData.custom_recipes) {
@@ -75,9 +103,7 @@ function syncWithCloud() {
 
 function sendDataToCloud(type, updatedData) {
     if (!currentRoom) return;
-
     var safePayload = sanitizeFirebasePayload(updatedData);
-
     fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/" + type + ".json", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -88,11 +114,9 @@ function sendDataToCloud(type, updatedData) {
         });
 }
 
-function getMaterialImagePath(name) {
-    var slug = name.toLowerCase().replace(/[^a-zа-я0-9\s]/g, "").trim().replace(/\s+/g, "_");
-    return "img/" + slug + ".png";
-}
-
+// ============================================================
+// 4. СКЛАД И ПРИКАЗЫ (главная вкладка)
+// ============================================================
 function renderMainDashboard() {
     var ordersPanel = document.getElementById("leader-orders-display");
     var warehousePanel = document.getElementById("global-warehouse-display");
@@ -102,6 +126,7 @@ function renderMainDashboard() {
     var ordersHtml = "";
 
     for (var k in craftData) {
+        if (isRecipeHidden(k)) continue;
         var targetQty = globalTargetCounts[k] || 0;
         if (targetQty > 0) {
             var item = craftData[k];
@@ -125,6 +150,7 @@ function renderMainDashboard() {
     // Склад
     var allMats = new Set();
     for (var k in craftData) {
+        if (isRecipeHidden(k)) continue;
         for (var m in craftData[k].materials) allMats.add(m);
     }
     var sortedMats = Array.from(allMats).sort();
@@ -151,7 +177,6 @@ function renderMainDashboard() {
             warehousePanel.appendChild(row);
         });
     } else {
-        // Обновляем существующие src — на случай если иконка подгрузилась из облака
         sortedMats.forEach(function (m) {
             var rowEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
             if (!rowEl) return;
@@ -208,22 +233,26 @@ window.changeWarehouseStock = function (matName, val) {
     renderMainDashboard();
 };
 
-// ============ ПАНЕЛЬ ЛИДЕРА ============
+// ============================================================
+// 5. ПАНЕЛЬ ЛИДЕРА (редактирование приказов + удаление)
+// ============================================================
 function renderLeaderEditPanel() {
     var p = document.getElementById("leader-edit-list");
     if (!p) return;
 
     var groupedCrafts = {};
+    var visibleCount = 0;
     for (var k in craftData) {
+        if (isRecipeHidden(k)) continue;
+        visibleCount++;
         var loc = craftData[k].location || "bar_bench";
         if (!groupedCrafts[loc]) groupedCrafts[loc] = [];
         groupedCrafts[loc].push(k);
     }
 
-    var totalItems = Object.keys(craftData).length;
     var currentRows = p.querySelectorAll(".recipe-item");
 
-    if (currentRows.length !== totalItems) {
+    if (currentRows.length !== visibleCount) {
         p.innerHTML = "";
         for (var locKey in locationNames) {
             if (groupedCrafts[locKey] && groupedCrafts[locKey].length > 0) {
@@ -249,30 +278,27 @@ function renderLeaderEditPanel() {
                         + '<button class="btn" onclick="changeLeaderTarget(\'' + k + '\', -1)">-</button>'
                         + '<span class="counter" id="lead-cnt-' + k + '">0</span>'
                         + '<button class="btn btn-plus" onclick="changeLeaderTarget(\'' + k + '\', 1)">+</button>'
+                        + '<button class="btn btn-danger" title="Удалить рецепт" onclick="deleteCraft(\'' + k + '\')">🗑</button>'
                         + '</div>';
                     p.appendChild(row);
                 });
             }
         }
     } else {
-        // Обновляем src на случай подгрузки новых иконок
         for (var k in craftData) {
-            var rowEl = p.querySelector('[onclick*="changeLeaderTarget(\'' + k + '\'"]');
-            var container = rowEl ? rowEl.closest(".recipe-item") : null;
-            if (container) {
-                var img = container.querySelector(".item-icon");
-                if (img) {
-                    var wantSrc = getItemIconSrc(k, craftData[k]);
-                    if (img.getAttribute("src") !== wantSrc) {
-                        img.style.visibility = "";
-                        img.setAttribute("src", wantSrc);
-                    }
+            if (isRecipeHidden(k)) continue;
+            var cntEl = document.getElementById("lead-cnt-" + k);
+            if (cntEl) {
+                var cloudVal = globalTargetCounts[k] || 0;
+                if (cntEl.textContent !== String(cloudVal)) {
+                    cntEl.textContent = cloudVal;
                 }
             }
         }
     }
 
     for (var k in craftData) {
+        if (isRecipeHidden(k)) continue;
         var cntEl = document.getElementById("lead-cnt-" + k);
         if (cntEl) {
             var cloudVal = globalTargetCounts[k] || 0;
@@ -289,10 +315,101 @@ window.changeLeaderTarget = function (key, val) {
     current += val;
     if (current < 0) current = 0;
     globalTargetCounts[key] = current;
-
     var cntEl = document.getElementById("lead-cnt-" + key);
     if (cntEl) cntEl.textContent = current;
-
     sendDataToCloud("targets", globalTargetCounts);
     renderMainDashboard();
+};
+
+// ============================================================
+// 6. УДАЛЕНИЕ РЕЦЕПТА (custom = DELETE, built-in = hide-флаг)
+// ============================================================
+window.deleteCraft = function (key) {
+    if (!isLeader) {
+        alert("Удалять рецепты может только Лидер фракции или Администратор.");
+        return;
+    }
+    var item = craftData[key];
+    if (!item) return;
+
+    var isCustom = isCustomRecipe(key);
+    var msg = isCustom
+        ? "Удалить КАСТОМНЫЙ рецепт \"" + item.name + "\"?\n\nОн будет стёрт из Firebase и исчезнет у всех фракций."
+        : "Скрыть ВСТРОЕННЫЙ рецепт \"" + item.name + "\" в вашей фракции?\n\nУ других фракций он останется. Отменить можно вручную через Firebase.";
+
+    if (!confirm(msg)) return;
+
+    if (isCustom) {
+        // 1) Удаляем сам рецепт
+        fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/custom_recipes/" + key + ".json", {
+            method: "DELETE"
+        })
+            .then(function () {
+                // 2) Удаляем привязанную иконку (если была)
+                return fetch(FIREBASE_URL + "/icons/items/" + encodeURIComponent(key) + ".json", {
+                    method: "DELETE"
+                }).catch(function () { /* если иконки нет — не страшно */ });
+            })
+            .then(function () {
+                // 3) Убираем из локального объекта
+                delete craftData[key];
+
+                // 4) Сбрасываем цель, если она была выставлена
+                if (globalTargetCounts[key]) {
+                    delete globalTargetCounts[key];
+                    sendDataToCloud("targets", globalTargetCounts);
+                }
+
+                renderLeaderEditPanel();
+                renderMainDashboard();
+                alert("Рецепт удалён из облака.");
+            })
+            .catch(function (err) {
+                alert("Ошибка удаления: " + err.message);
+            });
+    } else {
+        // Встроенный: ставим флаг скрытия
+        hiddenRecipes[key] = true;
+
+        fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/hidden_recipes.json", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(hiddenRecipes)
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json();
+            })
+            .then(function () {
+                // Сбрасываем приказ, если он был
+                if (globalTargetCounts[key]) {
+                    delete globalTargetCounts[key];
+                    sendDataToCloud("targets", globalTargetCounts);
+                }
+
+                renderLeaderEditPanel();
+                renderMainDashboard();
+            })
+            .catch(function (err) {
+                // Откатываем флаг, если Firebase ругнулась
+                delete hiddenRecipes[key];
+                alert("Не удалось скрыть рецепт: " + err.message);
+            });
+    }
+};
+
+// Восстановление встроенного рецепта (пригодится админам)
+window.unhideCraft = function (key) {
+    if (!isLeader) return;
+    if (!hiddenRecipes[key]) return;
+    delete hiddenRecipes[key];
+
+    fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/hidden_recipes.json", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(hiddenRecipes)
+    }).then(function () {
+        renderLeaderEditPanel();
+        renderMainDashboard();
+    });
 };
