@@ -61,21 +61,26 @@ function renderMainDashboard() {
             }
         }
     }
-
-    // 2. Умное обновление панели приказов лидера (без полной очистки innerHTML)
+    // 2. Умное обновление панели приказов лидера
     if (!hasOrders) {
         ordersPanel.innerHTML = '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
     } else {
-        // Создаем временный контейнер, чтобы собрать структуру один раз
-        var ordersHtml = "";
-        for (var k in craftData) {
-            var targetQty = globalTargetCounts[k] || 0;
-            if (targetQty > 0) {
-                var item = craftData[k];
-                ordersHtml += '<div class="recipe-item"><div class="item-meta"><img class="item-icon" src="' + item.image + '"><span class="recipe-name">' + item.name + '</span></div><span class="counter" style="color:#fff;">Приказ: ' + targetQty + ' шт</span></div>';
+        // Проверяем, совпадает ли количество элементов, чтобы не перерисовывать каркас зря
+        var currentOrderItems = ordersPanel.querySelectorAll(".recipe-item");
+        var activeOrdersCount = 0;
+        for (var k in craftData) { if (globalTargetCounts[k] > 0) activeOrdersCount++; }
+
+        if (currentOrderItems.length !== activeOrdersCount) {
+            var ordersHtml = "";
+            for (var k in craftData) {
+                var targetQty = globalTargetCounts[k] || 0;
+                if (targetQty > 0) {
+                    var item = craftData[k];
+                    ordersHtml += '<div class="recipe-item"><div class="item-meta"><img class="item-icon" src="' + item.image + '"><span class="recipe-name">' + item.name + '</span></div><span class="counter" style="color:#fff;">Приказ: ' + targetQty + ' шт</span></div>';
+                }
             }
+            ordersPanel.innerHTML = ordersHtml;
         }
-        ordersPanel.innerHTML = ordersHtml;
     }
 
     // 3. Собираем уникальный список хлама со всей игры
@@ -85,17 +90,17 @@ function renderMainDashboard() {
     }
     var sortedMats = Array.from(allPossibleMaterials).sort();
 
-    // 4. ТЕХНОЛОГИЯ ТОЧЕЧНОГО ОБНОВЛЕНИЯ (Проверяем, созданы ли уже строки склада)
+    // 4. ТЕХНОЛОГИЯ ТОЧЕЧНОГО ОБНОВЛЕНИЯ СКЛАДА
     var currentRows = warehousePanel.querySelectorAll(".material-item");
     
     if (currentRows.length !== sortedMats.length) {
-        // Если строк еще нет (первый запуск), строим каркас склада один раз
         warehousePanel.innerHTML = "";
         sortedMats.forEach(function(m) {
             var row = document.createElement("div");
             row.className = "material-item";
-            row.setAttribute("data-mat-name", m); // Привязываем метку хлама к строке
+            row.setAttribute("data-mat-name", m);
             
+            // Вшиваем картинку строго ОДИН РАЗ здесь. В циклах обновления её больше не будет!
             row.innerHTML = '<div class="item-meta"><img class="item-icon" src="' + getMaterialImagePath(m) + '"><div class="mat-info"><span class="mat-name">' + m + '</span><span class="mat-needed-text" id="mat-req-text-' + m + '"></span></div></div><div class="controls"><button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button><span class="counter" style="color:#ffb74d;" id="mat-stock-cnt-' + m + '">0</span><button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button><span class="material-count" id="mat-status-text-' + m + '"></span></div>';
             warehousePanel.appendChild(row);
         });
