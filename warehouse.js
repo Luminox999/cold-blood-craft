@@ -158,22 +158,31 @@ function renderMainDashboard() {
     }
 
     ordersPanel.innerHTML = ordersHtml || '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
+// Собираем материалы из ДВУХ источников:
+// 1) из рецептов (нужны для отображения плана)
+// 2) из текущего склада Firebase (даже если рецептов нет)
+var allMats = new Set();
 
-    // Собираем материалы
-    var allMats = new Set();
-    for (var k2 in craftData) {
-        if (isRecipeHidden(k2)) continue;
-        var mats = craftData[k2].materials;
-        if (!mats) continue;
-        for (var m2 in mats) allMats.add(m2);
+for (var k2 in craftData) {
+    if (isRecipeHidden(k2)) continue;
+    var mats = craftData[k2].materials;
+    if (!mats) continue;
+    for (var m2 in mats) allMats.add(m2);
+}
+
+for (var matKey in globalWarehouse) {
+    if (globalWarehouse[matKey] > 0 || globalWarehouse[matKey] === 0) {
+        allMats.add(matKey);
     }
-    var sortedMats = Array.from(allMats).sort();
+}
+
+var sortedMats = Array.from(allMats).sort();
 
     // Если материалов нет — сразу понятный текст, а не бесконечная "Загрузка..."
-    if (sortedMats.length === 0) {
-        warehousePanel.innerHTML = '<div class="empty-message">Нет ни одного материала в базе рецептов.</div>';
-        return;
-    }
+   if (sortedMats.length === 0) {
+    warehousePanel.innerHTML = '<div class="empty-message">Склад пуст. Нажмите «+» у материала или добавьте рецепт с ингредиентами.</div>';
+    return;
+}
 
     // Проверяем: если структура уже отрисована — просто обновляем содержимое
     var existingNames = [];
@@ -429,3 +438,31 @@ window.unhideCraft = function (key) {
         renderMainDashboard();
     });
 };
+// ============================================================
+// 7. РУЧНОЕ ДОБАВЛЕНИЕ МАТЕРИАЛА НА СКЛАД
+// ============================================================
+document.addEventListener("DOMContentLoaded", function () {
+    var btn = document.getElementById("btn-add-warehouse-material");
+    if (!btn) return;
+
+    btn.onclick = function () {
+        if (!isLeader) {
+            alert("Добавлять материалы на склад может только Лидер фракции или Администратор.");
+            return;
+        }
+
+        var name = prompt("Название материала (например: Медный слиток):");
+        if (!name) return;
+        name = name.trim();
+        if (!name) return;
+
+        if (globalWarehouse[name] !== undefined) {
+            alert("Такой материал уже есть на складе. Используйте кнопки +/- у строки.");
+            return;
+        }
+
+        globalWarehouse[name] = 0;
+        sendDataToCloud("warehouse", globalWarehouse);
+        renderMainDashboard();
+    };
+});
