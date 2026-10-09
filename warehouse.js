@@ -1,11 +1,10 @@
 // ============================================================
 // 0. ГЛОБАЛЬНОЕ СОСТОЯНИЕ
 // ============================================================
-var hiddenRecipes = {};       // {key: true} — рецепты, скрытые ЭТОЙ фракцией
-var globalIcons = { items: {}, materials: {} };
-
-// Снимок базовых ключей из craftdata.js — чтобы отличать их от кастомных
+var hiddenRecipes = (typeof hiddenRecipes !== 'undefined') ? hiddenRecipes : {};
+var globalIcons = (typeof globalIcons !== 'undefined') ? globalIcons : { items: {}, materials: {} };
 var baseRecipeKeys = [];
+
 document.addEventListener("DOMContentLoaded", function () {
     if (typeof craftData !== 'undefined') {
         baseRecipeKeys = Object.keys(craftData);
@@ -13,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ============================================================
-// 1. УТИЛИТЫ FIREBASE
+// 1. УТИЛИТЫ
 // ============================================================
 function sanitizeFirebaseKey(key) {
     return String(key).replace(/[.#$\/\[\]]/g, "_");
@@ -29,7 +28,7 @@ function sanitizeFirebasePayload(obj) {
 }
 
 function isRecipeHidden(key) {
-    return !!hiddenRecipes[key];
+    return !!(hiddenRecipes && hiddenRecipes[key]);
 }
 
 function isCustomRecipe(key) {
@@ -37,7 +36,7 @@ function isCustomRecipe(key) {
 }
 
 // ============================================================
-// 2. ИКОНКИ ИЗ ОБЛАКА
+// 2. ИКОНКИ
 // ============================================================
 function syncIconsFromCloud() {
     fetch(FIREBASE_URL + "/icons.json?nocache=" + Date.now(), {
@@ -58,11 +57,11 @@ function syncIconsFromCloud() {
 }
 
 function getItemIconSrc(craftKey, item) {
-    return globalIcons.items[craftKey] || item.image;
+    return (globalIcons.items && globalIcons.items[craftKey]) || item.image;
 }
 
 function getMaterialIconSrc(matName) {
-    return globalIcons.materials[matName] || getMaterialImagePath(matName);
+    return (globalIcons.materials && globalIcons.materials[matName]) || getMaterialImagePath(matName);
 }
 
 function getMaterialImagePath(name) {
@@ -71,7 +70,7 @@ function getMaterialImagePath(name) {
 }
 
 // ============================================================
-// 3. СИНХРОНИЗАЦИЯ С ОБЛАКОМ
+// 3. СИНХРОНИЗАЦИЯ
 // ============================================================
 function syncWithCloud() {
     if (!currentRoom) return;
@@ -80,7 +79,10 @@ function syncWithCloud() {
         method: "GET",
         headers: { "Accept": "application/json" }
     })
-        .then(function (res) { return res.json(); })
+        .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+        })
         .then(function (data) {
             var safeData = data || {};
             globalTargetCounts = safeData.targets || {};
@@ -98,6 +100,9 @@ function syncWithCloud() {
         })
         .catch(function (err) {
             console.error("Ошибка синхронизации данных:", err);
+            // ВАЖНО: даже если Firebase недоступен — рисуем из локального craftdata.js
+            renderLeaderEditPanel();
+            renderMainDashboard();
         });
 }
 
@@ -115,12 +120,19 @@ function sendDataToCloud(type, updatedData) {
 }
 
 // ============================================================
-// 4. СКЛАД И ПРИКАЗЫ (главная вкладка)
+// 4. ГЛАВНАЯ ВКЛАДКА: ПРИКАЗЫ И СКЛАД
 // ============================================================
 function renderMainDashboard() {
     var ordersPanel = document.getElementById("leader-orders-display");
     var warehousePanel = document.getElementById("global-warehouse-display");
     if (!ordersPanel || !warehousePanel) return;
+
+    // Защита: craftData может быть ещё не определён
+    if (typeof craftData === 'undefined' || !craftData) {
+        ordersPanel.innerHTML = '<div class="empty-message">База рецептов не загружена.</div>';
+        warehousePanel.innerHTML = '<div class="empty-message">База рецептов не загружена.</div>';
+        return;
+    }
 
     var totalRequiredMaterials = {};
     var ordersHtml = "";
@@ -147,16 +159,36 @@ function renderMainDashboard() {
 
     ordersPanel.innerHTML = ordersHtml || '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
 
-    // Склад
+    // Собираем материалы
     var allMats = new Set();
-    for (var k in craftData) {
-        if (isRecipeHidden(k)) continue;
-        for (var m in craftData[k].materials) allMats.add(m);
+    for (var k2 in craftData) {
+        if (isRecipeHidden(k2)) continue;
+        var mats = craftData[k2].materials;
+        if (!mats) continue;
+        for (var m2 in mats) allMats.add(m2);
     }
     var sortedMats = Array.from(allMats).sort();
 
-    var currentRows = warehousePanel.querySelectorAll(".material-item");
-    if (currentRows.length !== sortedMats.length) {
+    // Если материалов нет — сразу понятный текст, а не бесконечная "Загрузка..."
+    if (sortedMats.length === 0) {
+        warehousePanel.innerHTML = '<div class="empty-message">Нет ни одного материала в базе рецептов.</div>';
+        return;
+    }
+
+    // Проверяем: если структура уже отрисована — просто обновляем содержимое
+    var existingNames = [];
+    var existingRows = warehousePanel.querySelectorAll(".material-item");
+    for (var i = 0; i < existingRows.length; i++) {
+        existingNames.push(existingRows[i].getAttribute("data-mat-name"));
+    }
+    var needsRebuild = existingRows.length !== sortedMats.length;
+    if (!needsRebuild) {
+        for (var j = 0; j < sortedMats.length; j++) {
+            if (existingNames[j] !== sortedMats[j]) { needsRebuild = true; break; }
+        }
+    }
+
+    if (needsRebuild) {
         warehousePanel.innerHTML = "";
         sortedMats.forEach(function (m) {
             var row = document.createElement("div");
@@ -177,6 +209,7 @@ function renderMainDashboard() {
             warehousePanel.appendChild(row);
         });
     } else {
+        // Обновляем иконки на случай подгрузки из облака
         sortedMats.forEach(function (m) {
             var rowEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
             if (!rowEl) return;
@@ -191,6 +224,7 @@ function renderMainDashboard() {
         });
     }
 
+    // Обновляем счётчики и тексты
     sortedMats.forEach(function (m) {
         var reqQty = totalRequiredMaterials[m] || 0;
         var stockQty = globalWarehouse[m] || 0;
@@ -234,11 +268,13 @@ window.changeWarehouseStock = function (matName, val) {
 };
 
 // ============================================================
-// 5. ПАНЕЛЬ ЛИДЕРА (редактирование приказов + удаление)
+// 5. ПАНЕЛЬ ЛИДЕРА
 // ============================================================
 function renderLeaderEditPanel() {
     var p = document.getElementById("leader-edit-list");
     if (!p) return;
+
+    if (typeof craftData === 'undefined' || !craftData) return;
 
     var groupedCrafts = {};
     var visibleCount = 0;
@@ -250,8 +286,12 @@ function renderLeaderEditPanel() {
         groupedCrafts[loc].push(k);
     }
 
-    var currentRows = p.querySelectorAll(".recipe-item");
+    if (visibleCount === 0) {
+        p.innerHTML = '<div class="empty-message">Нет ни одного рецепта.</div>';
+        return;
+    }
 
+    var currentRows = p.querySelectorAll(".recipe-item");
     if (currentRows.length !== visibleCount) {
         p.innerHTML = "";
         for (var locKey in locationNames) {
@@ -284,17 +324,6 @@ function renderLeaderEditPanel() {
                 });
             }
         }
-    } else {
-        for (var k in craftData) {
-            if (isRecipeHidden(k)) continue;
-            var cntEl = document.getElementById("lead-cnt-" + k);
-            if (cntEl) {
-                var cloudVal = globalTargetCounts[k] || 0;
-                if (cntEl.textContent !== String(cloudVal)) {
-                    cntEl.textContent = cloudVal;
-                }
-            }
-        }
     }
 
     for (var k in craftData) {
@@ -322,7 +351,7 @@ window.changeLeaderTarget = function (key, val) {
 };
 
 // ============================================================
-// 6. УДАЛЕНИЕ РЕЦЕПТА (custom = DELETE, built-in = hide-флаг)
+// 6. УДАЛЕНИЕ РЕЦЕПТОВ
 // ============================================================
 window.deleteCraft = function (key) {
     if (!isLeader) {
@@ -335,31 +364,25 @@ window.deleteCraft = function (key) {
     var isCustom = isCustomRecipe(key);
     var msg = isCustom
         ? "Удалить КАСТОМНЫЙ рецепт \"" + item.name + "\"?\n\nОн будет стёрт из Firebase и исчезнет у всех фракций."
-        : "Скрыть ВСТРОЕННЫЙ рецепт \"" + item.name + "\" в вашей фракции?\n\nУ других фракций он останется. Отменить можно вручную через Firebase.";
+        : "Скрыть ВСТРОЕННЫЙ рецепт \"" + item.name + "\" в вашей фракции?\n\nУ других фракций он останется.";
 
     if (!confirm(msg)) return;
 
     if (isCustom) {
-        // 1) Удаляем сам рецепт
         fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/custom_recipes/" + key + ".json", {
             method: "DELETE"
         })
             .then(function () {
-                // 2) Удаляем привязанную иконку (если была)
                 return fetch(FIREBASE_URL + "/icons/items/" + encodeURIComponent(key) + ".json", {
                     method: "DELETE"
-                }).catch(function () { /* если иконки нет — не страшно */ });
+                }).catch(function () { });
             })
             .then(function () {
-                // 3) Убираем из локального объекта
                 delete craftData[key];
-
-                // 4) Сбрасываем цель, если она была выставлена
                 if (globalTargetCounts[key]) {
                     delete globalTargetCounts[key];
                     sendDataToCloud("targets", globalTargetCounts);
                 }
-
                 renderLeaderEditPanel();
                 renderMainDashboard();
                 alert("Рецепт удалён из облака.");
@@ -368,9 +391,7 @@ window.deleteCraft = function (key) {
                 alert("Ошибка удаления: " + err.message);
             });
     } else {
-        // Встроенный: ставим флаг скрытия
         hiddenRecipes[key] = true;
-
         fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/hidden_recipes.json", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -381,29 +402,24 @@ window.deleteCraft = function (key) {
                 return res.json();
             })
             .then(function () {
-                // Сбрасываем приказ, если он был
                 if (globalTargetCounts[key]) {
                     delete globalTargetCounts[key];
                     sendDataToCloud("targets", globalTargetCounts);
                 }
-
                 renderLeaderEditPanel();
                 renderMainDashboard();
             })
             .catch(function (err) {
-                // Откатываем флаг, если Firebase ругнулась
                 delete hiddenRecipes[key];
                 alert("Не удалось скрыть рецепт: " + err.message);
             });
     }
 };
 
-// Восстановление встроенного рецепта (пригодится админам)
 window.unhideCraft = function (key) {
     if (!isLeader) return;
     if (!hiddenRecipes[key]) return;
     delete hiddenRecipes[key];
-
     fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/hidden_recipes.json", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
