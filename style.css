@@ -357,6 +357,11 @@ h1 {
 /* ======================================================== */
 /* 7. КОНСТРУКТОР ИНГРЕДИЕНТОВ (вкладка Лидера)             */
 /* ======================================================== */
+.result-title .btn {
+    font-weight: bold;
+    text-transform: none;
+    letter-spacing: normal;
+}
 .ingredients-constructor-row {
     display: flex;
     gap: 8px;
