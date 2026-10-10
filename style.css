@@ -290,4 +290,195 @@ h1 {
     gap: 6px;
     padding: 10px 8px 8px 8px;
     background-color: rgba(255, 255, 255, 0.02);
-    border: 
+    border: 1px solid #2b2b2b;
+    border-radius: 6px;
+    position: relative;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-height: 138px;
+    box-sizing: border-box;
+}
+
+.material-tile.tile-need {
+    background-color: rgba(255, 183, 77, 0.12);
+    border-color: rgba(255, 183, 77, 0.5);
+}
+
+.material-tile.tile-done {
+    background-color: rgba(46, 125, 50, 0.18);
+    border-color: rgba(46, 125, 50, 0.6);
+}
+
+.material-tile .tile-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    line-height: 1.15;
+    width: 100%;
+    min-height: 26px;
+    max-height: 26px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+.material-tile .tile-icon {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background-color: #151515;
+    border: 1px solid #333;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.material-tile .tile-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+}
+
+.material-tile .tile-controls .btn {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.material-tile .tile-controls .counter {
+    min-width: 28px;
+    font-size: 14px;
+    color: #ffb74d;
+    text-align: center;
+}
+
+.material-tile .tile-status {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+}
+
+.material-tile.tile-done .tile-status {
+    color: #81c784;
+    font-weight: bold;
+}
+
+.material-tile.tile-need .tile-status {
+    color: var(--orange-color);
+    font-weight: bold;
+}
+
+/* ======================================================== */
+/* 7. НАРЕЗЧИК ИКОНОК                                       */
+/* ======================================================== */
+.slicer-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.canvas-container {
+    position: relative;
+    border: 2px solid #444;
+    background: #000;
+    overflow: auto;
+    max-height: 500px;
+}
+
+#screenshot-canvas {
+    display: block;
+    cursor: crosshair;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#crop-selector {
+    position: absolute;
+    border: 2px dashed var(--orange-color);
+    background: rgba(255, 183, 77, 0.15);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    display: none;
+    z-index: 2;
+}
+
+.slicer-controls-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: rgba(0,0,0,0.4);
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.slicer-select {
+    background: #2b2b2b;
+    color: #fff;
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    border-radius: 4px;
+    min-width: 220px;
+    font-size: 13px;
+}
+
+#preview-canvas {
+    background-color: rgba(0,0,0,0.5);
+    border: 1px solid var(--orange-color);
+    border-radius: 4px;
+}
+
+#slicer-status {
+    font-family: monospace;
+    font-size: 12px;
+    padding: 4px 0;
+    min-height: 18px;
+}
+
+/* ======================================================== */
+/* 8. КОНСТРУКТОР ИНГРЕДИЕНТОВ                               */
+/* ======================================================== */
+.ingredients-constructor-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.ingredients-constructor-row .select-field {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.ingredients-constructor-row .input-field {
+    width: 70px;
+    margin-bottom: 0;
+}
+
+/* ======================================================== */
+/* 9. КНОПКИ В ЗАГОЛОВКАХ                                    */
+/* ======================================================== */
+.result-title .btn {
+    font-weight: bold;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+/* ======================================================== */
+/* 10. СЕКЦИЯ ПРЕДЛОЖЕК                                       */
+/* ======================================================== */
+#pending-recipes-display .recipe-item {
+    border-left: 3px solid var(--orange-color);
+}
