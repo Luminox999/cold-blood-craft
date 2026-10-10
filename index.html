@@ -44,6 +44,7 @@
         <button class="tab-btn active" onclick="switchTab('main-tab', event)">📦 Снабжение и Склад</button>
         <button class="tab-btn" onclick="switchTab('suggest-tab', event)">📝 Записать рецепт</button>
         <button class="tab-btn" id="leader-tab-nav" style="display:none;" onclick="switchTab('leader-tab', event)">👑 Управление Лидера</button>
+        <button class="tab-btn" id="import-tab-nav" style="display:none;" onclick="switchTab('import-tab', event)">📥 Импорт JSON</button>
         <button class="tab-btn" onclick="switchTab('slicer-tab', event)">✂️ Нарезчик Иконок</button>
         <button class="tab-btn" style="background:#555; color:#fff; margin-left:auto;" onclick="location.reload()">🚪 Выйти</button>
     </div>
@@ -146,7 +147,45 @@
             <div class="recipes-list" id="leader-edit-list"></div>
         </div>
     </div>
+<!-- ВКЛАДКА: ИМПОРТ JSON -->
+<div id="import-tab" class="container tab-content" style="display: none;">
+    <div class="panel" style="flex-basis: 100%;">
+        <div class="result-title" style="border-bottom-color: #ffb74d;">📥 Импорт JSON в Firebase</div>
+        <p style="font-size:13px; color:#aaa; margin-top:0;">
+            Вставь JSON ниже, выбери, куда его залить, нажми «Импортировать». Данные уйдут через <code>PUT</code>.
+            <b>Внимание:</b> PUT перезаписывает ветку полностью.
+        </p>
 
+        <label style="font-size:12px; color:#fff;">Куда импортировать:</label>
+        <select id="import-target" class="select-field">
+            <option value="materials_catalog">/materials_catalog  — общий справочник материалов</option>
+            <option value="custom_recipes">/rooms/&lt;фракция&gt;/custom_recipes  — рецепты текущей фракции</option>
+            <option value="recipes_pending">/rooms/&lt;фракция&gt;/recipes_pending  — предложки (обычно не нужно)</option>
+            <option value="warehouse">/rooms/&lt;фракция&gt;/warehouse  — склад</option>
+            <option value="targets">/rooms/&lt;фракция&gt;/targets  — приказы</option>
+            <option value="hidden_recipes">/rooms/&lt;фракция&gt;/hidden_recipes  — скрытые рецепты</option>
+            <option value="custom">Ввести путь вручную…</option>
+        </select>
+
+        <div id="import-custom-path-wrapper" style="display:none; margin-bottom:15px;">
+            <label style="font-size:12px; color:#fff;">Путь вручную (без FIREBASE_URL):</label>
+            <input type="text" id="import-custom-path" class="input-field" placeholder="/rooms/свобода/custom_recipes">
+        </div>
+
+        <label style="font-size:12px; color:#fff;">JSON:</label>
+        <textarea id="import-json-textarea" class="input-field"
+            style="min-height: 320px; font-family: monospace; font-size: 12px; white-space: pre; overflow: auto;"
+            placeholder='{ "sr25": { "name": "SR-25", ... } }'></textarea>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-plus" id="btn-import-json" style="width: auto; padding: 0 25px; height: 38px; font-size: 13px;">📥 Импортировать</button>
+            <button class="btn" id="btn-import-validate" style="width: auto; padding: 0 15px; height: 38px; font-size: 12px;">🔍 Проверить JSON</button>
+            <button class="btn" id="btn-import-clear" style="width: auto; padding: 0 15px; height: 38px; font-size: 12px; background:#555;">✖ Очистить</button>
+        </div>
+
+        <div id="import-status" style="font-family: monospace; font-size: 12px; padding: 10px 0; min-height: 20px; color:#81c784;"></div>
+    </div>
+</div>
     <!-- ВКЛАДКА 4: НАРЕЗЧИК -->
     <div id="slicer-tab" class="container tab-content" style="display: none;">
         <div class="panel" style="border: 1px dashed var(--orange-color);">
@@ -166,7 +205,7 @@
             </div>
         </div>
     </div>
-
+    <script src="import.js"></script>
     <script src="tester.js"></script>
     <script src="locations.js"></script>
     <script src="auth.js"></script>
