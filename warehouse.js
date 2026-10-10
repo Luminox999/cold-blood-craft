@@ -143,6 +143,7 @@ window.addMaterialToCatalog = function (name) {
         })
         .then(function () {
             renderMaterialsCatalog();
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
             // Обновляем селекты во всех строках конструктора, чтобы новый материал появился в списке
             var container = document.getElementById("ingredients-constructor-container");
             if (container) {
@@ -208,6 +209,7 @@ function syncWithCloud() {
             renderMainDashboard();
             renderPendingRecipes();
             renderMaterialsCatalog();
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
         })
         .catch(function (err) {
             console.error("Ошибка синхронизации данных:", err);
@@ -216,6 +218,7 @@ function syncWithCloud() {
             renderMainDashboard();
             renderPendingRecipes();
             renderMaterialsCatalog();
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
         });
 }
 
