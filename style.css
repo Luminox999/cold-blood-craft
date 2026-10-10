@@ -391,16 +391,13 @@ h1 {
     gap: 6px;
     padding: 10px 8px 8px 8px;
     background-color: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid #2b2b2b;
     border-radius: 6px;
     position: relative;
     transition: background-color 0.2s, border-color 0.2s;
     min-height: 148px;
     box-sizing: border-box;
 }
-
-/* Вне плана */
-.material-tile { border-color: #2b2b2b; }
 
 /* В плане — надо собрать */
 .material-tile.tile-need {
@@ -414,7 +411,6 @@ h1 {
     border-color: rgba(46, 125, 50, 0.6);
 }
 
-/* Название сверху */
 .material-tile .tile-name {
     font-size: 11px;
     font-weight: 600;
@@ -432,7 +428,6 @@ h1 {
     word-break: break-word;
 }
 
-/* Иконка */
 .material-tile .tile-icon {
     width: 56px;
     height: 56px;
@@ -443,7 +438,6 @@ h1 {
     flex-shrink: 0;
 }
 
-/* Кнопки - / + и счётчик */
 .material-tile .tile-controls {
     display: flex;
     align-items: center;
@@ -466,7 +460,6 @@ h1 {
     text-align: center;
 }
 
-/* Цифра справа сверху — сколько не хватает */
 .material-tile .tile-badge {
     position: absolute;
     top: 4px;
@@ -485,7 +478,6 @@ h1 {
     color: #81c784;
 }
 
-/* Готово! подпись */
 .material-tile .tile-status {
     position: absolute;
     bottom: 4px;
