@@ -1,3 +1,59 @@
+// Перестройка выпадающего списка в нарезчике.
+// Вызывается после каждой синхронизации с облаком,
+// потому что список материалов мог измениться.
+function refreshSlicerSelect() {
+    var selectEl = document.getElementById("material-selector");
+    if (!selectEl) return;
+
+    // Запоминаем текущее значение, чтобы вернуть его после перестройки
+    var currentVal = selectEl.value;
+
+    selectEl.innerHTML = "";
+
+    if (typeof craftData === 'undefined' || !craftData) return;
+
+    // Группа «Предметы»
+    var itemGroup = document.createElement("optgroup");
+    itemGroup.label = "Предметы (верстак)";
+    var itemCount = 0;
+    for (var key in craftData) {
+        var opt = document.createElement("option");
+        opt.value = "item:" + key;
+        opt.textContent = craftData[key].name;
+        itemGroup.appendChild(opt);
+        itemCount++;
+    }
+    if (itemCount > 0) selectEl.appendChild(itemGroup);
+
+    // Группа «Материалы» — из каталога + из рецептов + из склада
+    var matGroup = document.createElement("optgroup");
+    matGroup.label = "Материалы (хлам)";
+
+    var matSet = new Set();
+    if (typeof globalMaterialsCatalog !== 'undefined') {
+        for (var mk in globalMaterialsCatalog) matSet.add(mk);
+    }
+    for (var rk in craftData) {
+        var mats = craftData[rk].materials;
+        if (!mats) continue;
+        for (var mn in mats) matSet.add(mn);
+    }
+    if (typeof globalWarehouse !== 'undefined') {
+        for (var wk in globalWarehouse) matSet.add(wk);
+    }
+
+    var sortedMats = Array.from(matSet).sort();
+    sortedMats.forEach(function (mat) {
+        var opt = document.createElement("option");
+        opt.value = "mat:" + mat;
+        opt.textContent = mat;
+        matGroup.appendChild(opt);
+    });
+    if (sortedMats.length > 0) selectEl.appendChild(matGroup);
+
+    // Восстанавливаем выбор, если он был
+    if (currentVal) selectEl.value = currentVal;
+}
 function initSlicerInterface() {
     var fileInput = document.getElementById("screenshot-input");
     var outputZone = document.getElementById("cropper-zone");
@@ -34,31 +90,7 @@ function initSlicerInterface() {
     var selEnd = null;
 
     // Заполняем выпадающий список: сначала предметы (для верстака), потом материалы
-    if (typeof craftData !== 'undefined') {
-        var itemGroup = document.createElement("optgroup");
-        itemGroup.label = "Предметы (верстак)";
-        for (var key in craftData) {
-            var opt = document.createElement("option");
-            opt.value = "item:" + key;
-            opt.textContent = craftData[key].name;
-            itemGroup.appendChild(opt);
-        }
-        selectEl.appendChild(itemGroup);
-
-        var matGroup = document.createElement("optgroup");
-        matGroup.label = "Материалы (хлам)";
-        var matSet = new Set();
-        for (var k in craftData) {
-            for (var m in craftData[k].materials) matSet.add(m);
-        }
-        Array.from(matSet).sort().forEach(function (mat) {
-            var opt = document.createElement("option");
-            opt.value = "mat:" + mat;
-            opt.textContent = mat;
-            matGroup.appendChild(opt);
-        });
-        selectEl.appendChild(matGroup);
-    }
+  refreshSlicerSelect();
 
     // ==== Загрузка файла ====
     fileInput.addEventListener("change", function (e) {
