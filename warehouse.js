@@ -289,7 +289,18 @@ function renderMainDashboard() {
     for (var wk in globalWarehouse) allMats.add(wk);
     for (var ck in globalMaterialsCatalog) allMats.add(ck);
 
-    var sortedMats = Array.from(allMats).sort();
+        var sortedMats = Array.from(allMats).sort();
+
+    // Сортируем: сначала материалы в плане (Надо), потом — вне плана.
+    // Внутри каждой группы — по алфавиту.
+    sortedMats.sort(function (a, b) {
+        var aReq = totalRequiredMaterials[a] || 0;
+        var bReq = totalRequiredMaterials[b] || 0;
+        var aInPlan = aReq > 0 ? 0 : 1;
+        var bInPlan = bReq > 0 ? 0 : 1;
+        if (aInPlan !== bInPlan) return aInPlan - bInPlan;
+        return a.localeCompare(b, "ru");
+    });
 
     if (sortedMats.length === 0) {
         warehousePanel.innerHTML = '<div class="empty-message">Склад пуст. Нажмите «+ Материал» в шапке или добавьте рецепт с ингредиентами.</div>';
@@ -308,32 +319,31 @@ function renderMainDashboard() {
         }
     }
 
-    if (needsRebuild) {
+        if (needsRebuild) {
         warehousePanel.innerHTML = "";
         sortedMats.forEach(function (m) {
-            var row = document.createElement("div");
-            row.className = "material-item";
-            row.setAttribute("data-mat-name", m);
-            row.innerHTML = '<div class="item-meta">'
-                + '<img class="item-icon" src="' + getMaterialIconSrc(m) + '" onerror="this.style.visibility=\'hidden\'">'
-                + '<div class="mat-info">'
-                + '<span class="mat-name">' + m + '</span>'
-                + '<span class="mat-needed-text" id="mat-req-text-' + m + '">План на этот хлам не задан</span>'
-                + '</div></div>'
-                + '<div class="controls">'
-                + '<button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">-</button>'
-                + '<span class="counter" style="color:#ffb74d;" id="mat-stock-cnt-' + m + '">0</span>'
+            var tile = document.createElement("div");
+            tile.className = "material-tile";
+            tile.setAttribute("data-mat-name", m);
+
+            tile.innerHTML = ''
+                + '<div class="tile-name" title="' + m + '">' + m + '</div>'
+                + '<img class="tile-icon" src="' + getMaterialIconSrc(m) + '" onerror="this.style.visibility=\'hidden\'">'
+                + '<div class="tile-controls">'
+                + '<button class="btn" onclick="changeWarehouseStock(\'' + m + '\', -1)">−</button>'
+                + '<span class="counter" id="mat-stock-cnt-' + m + '">0</span>'
                 + '<button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button>'
-                + '<span class="material-count" id="mat-status-text-' + m + '">Вне плана</span>'
-                + '</div>';
-            warehousePanel.appendChild(row);
+                + '</div>'
+                + '<span class="tile-badge" id="mat-badge-' + m + '"></span>'
+                + '<span class="tile-status" id="mat-status-text-' + m + '">Вне плана</span>';
+            warehousePanel.appendChild(tile);
         });
     } else {
         // Обновляем только иконки на случай, если из облака прилетели новые
         sortedMats.forEach(function (m) {
-            var rowEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
-            if (!rowEl) return;
-            var img = rowEl.querySelector(".item-icon");
+            var tileEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
+            if (!tileEl) return;
+            var img = tileEl.querySelector(".tile-icon");
             if (img) {
                 var wantSrc = getMaterialIconSrc(m);
                 if (img.getAttribute("src") !== wantSrc) {
@@ -345,35 +355,36 @@ function renderMainDashboard() {
     }
 
     // Обновляем счётчики и статусы
-    sortedMats.forEach(function (m) {
+       sortedMats.forEach(function (m) {
         var reqQty = totalRequiredMaterials[m] || 0;
         var stockQty = globalWarehouse[m] || 0;
         var left = reqQty - stockQty;
 
-        var rowEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
-        var reqTxt = document.getElementById("mat-req-text-" + m);
+        var tileEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
         var stockCnt = document.getElementById("mat-stock-cnt-" + m);
         var statusTxt = document.getElementById("mat-status-text-" + m);
+        var badgeEl = document.getElementById("mat-badge-" + m);
 
-        if (rowEl && reqTxt && stockCnt && statusTxt) {
-            reqTxt.textContent = reqQty > 0 ? "По плану требуется: " + reqQty : "План на этот хлам не задан";
-            stockCnt.textContent = stockQty;
+        if (!tileEl || !stockCnt || !statusTxt) return;
 
-            if (reqQty > 0) {
-                if (left <= 0) {
-                    rowEl.classList.add("status-done");
-                    statusTxt.textContent = "Готово!";
-                    statusTxt.style.color = "#81c784";
-                } else {
-                    rowEl.classList.remove("status-done");
-                    statusTxt.textContent = "Надо: x" + left;
-                    statusTxt.style.color = "var(--orange-color)";
-                }
+        stockCnt.textContent = stockQty;
+
+        // Сбрасываем классы
+        tileEl.classList.remove("tile-need", "tile-done");
+
+        if (reqQty > 0) {
+            if (left <= 0) {
+                tileEl.classList.add("tile-done");
+                statusTxt.textContent = "Готово!";
+                if (badgeEl) badgeEl.textContent = "";
             } else {
-                rowEl.classList.remove("status-done");
-                statusTxt.textContent = "Вне плана";
-                statusTxt.style.color = "#888";
+                tileEl.classList.add("tile-need");
+                statusTxt.textContent = "Надо: " + left;
+                if (badgeEl) badgeEl.textContent = left;
             }
+        } else {
+            statusTxt.textContent = "Вне плана";
+            if (badgeEl) badgeEl.textContent = "";
         }
     });
 }
