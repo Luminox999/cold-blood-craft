@@ -373,3 +373,128 @@ h1 {
     width: 70px;
     margin-bottom: 0;
 }
+/* ======================================================== */
+/* ПЛИТОЧНАЯ РАСКЛАДКА СКЛАДА                                */
+/* ======================================================== */
+
+.material-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.material-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 8px 8px 8px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    position: relative;
+    transition: background-color 0.2s, border-color 0.2s;
+    min-height: 148px;
+    box-sizing: border-box;
+}
+
+/* Вне плана */
+.material-tile { border-color: #2b2b2b; }
+
+/* В плане — надо собрать */
+.material-tile.tile-need {
+    background-color: rgba(255, 183, 77, 0.12);
+    border-color: rgba(255, 183, 77, 0.5);
+}
+
+/* В плане — готово */
+.material-tile.tile-done {
+    background-color: rgba(46, 125, 50, 0.18);
+    border-color: rgba(46, 125, 50, 0.6);
+}
+
+/* Название сверху */
+.material-tile .tile-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    line-height: 1.15;
+    width: 100%;
+    min-height: 26px;
+    max-height: 26px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+/* Иконка */
+.material-tile .tile-icon {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    background-color: #151515;
+    border: 1px solid #333;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* Кнопки - / + и счётчик */
+.material-tile .tile-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+}
+
+.material-tile .tile-controls .btn {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.material-tile .tile-controls .counter {
+    min-width: 28px;
+    font-size: 14px;
+    color: #ffb74d;
+    text-align: center;
+}
+
+/* Цифра справа сверху — сколько не хватает */
+.material-tile .tile-badge {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--orange-color);
+    background: rgba(0,0,0,0.55);
+    border-radius: 3px;
+    padding: 1px 5px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.material-tile.tile-done .tile-badge {
+    color: #81c784;
+}
+
+/* Готово! подпись */
+.material-tile .tile-status {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #888;
+}
+
+.material-tile.tile-done .tile-status { color: #81c784; font-weight: bold; }
+.material-tile.tile-need .tile-status { color: var(--orange-color); }
