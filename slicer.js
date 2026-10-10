@@ -91,6 +91,74 @@ function initSlicerInterface() {
 
     // Заполняем выпадающий список: сначала предметы (для верстака), потом материалы
   refreshSlicerSelect();
+    // ==== ВСТАВКА ИЗ БУФЕРА (Ctrl+V) ====
+    document.addEventListener("paste", function (e) {
+        var tag = (e.target.tagName || "").toLowerCase();
+        if (tag === "input" || tag === "textarea") return;
+
+        var cb = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+        if (!cb) {
+            console.warn("[slicer] clipboardData недоступен");
+            return;
+        }
+
+        var imageFile = null;
+
+        // Способ 1: через items
+        if (cb.items && cb.items.length > 0) {
+            for (var i = 0; i < cb.items.length; i++) {
+                var it = cb.items[i];
+                if (it.kind === "file" && it.type && it.type.indexOf("image") === 0) {
+                    imageFile = it.getAsFile();
+                    if (imageFile) break;
+                }
+            }
+        }
+
+        // Способ 2: через files (некоторые браузеры кладут сюда)
+        if (!imageFile && cb.files && cb.files.length > 0) {
+            for (var j = 0; j < cb.files.length; j++) {
+                if (cb.files[j].type && cb.files[j].type.indexOf("image") === 0) {
+                    imageFile = cb.files[j];
+                    break;
+                }
+            }
+        }
+
+        if (!imageFile) return;
+
+        // Автопереключение на вкладку нарезчика
+        var slicerTab = document.getElementById("slicer-tab");
+        if (slicerTab && slicerTab.style.display === "none") {
+            var slicerBtn = document.querySelector('.tab-btn[onclick*="slicer-tab"]');
+            if (typeof switchTab === "function") {
+                switchTab("slicer-tab", { currentTarget: slicerBtn });
+            }
+        }
+
+        // Грузим картинку
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            img.onload = function () {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                outputZone.style.display = "block";
+                selector.style.display = "none";
+                selStart = null;
+                selEnd = null;
+                pCtx.clearRect(0, 0, 64, 64);
+                statusEl.style.color = "#81c784";
+                statusEl.textContent = "Вставлено из буфера: " + img.width + "×" + img.height;
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(imageFile);
+
+        e.preventDefault();
+        console.log("[slicer] Вставка из буфера: " + imageFile.type + ", " + imageFile.size + " байт");
+    });
 
     // ==== Загрузка файла ====
     fileInput.addEventListener("change", function (e) {
