@@ -1,5 +1,5 @@
 /* ======================================================== */
-/* 1. ГЛОБАЛЬНЫЕ НАСТРОЙКИ СТРАНИЦЫ И ЦВЕТА                 */
+/* 1. ГЛОБАЛЬНЫЕ НАСТРОЙКИ                                   */
 /* ======================================================== */
 :root {
     --bg-color: #121212;
@@ -37,7 +37,7 @@ h1 {
 }
 
 /* ======================================================== */
-/* 2. ОКНО АВТОРИЗАЦИИ                                      */
+/* 2. ОКНО АВТОРИЗАЦИИ                                       */
 /* ======================================================== */
 .auth-overlay {
     position: fixed;
@@ -70,7 +70,7 @@ h1 {
 }
 
 /* ======================================================== */
-/* 3. ПАНЕЛИ, ВКЛАДКИ, КОНТЕЙНЕРЫ                           */
+/* 3. ПАНЕЛИ, ВКЛАДКИ                                         */
 /* ======================================================== */
 .container {
     display: flex;
@@ -131,7 +131,7 @@ h1 {
 }
 
 /* ======================================================== */
-/* 4. ПОЛЯ ВВОДА, КНОПКИ, СЧЁТЧИКИ                          */
+/* 4. ПОЛЯ ВВОДА И КНОПКИ                                    */
 /* ======================================================== */
 .input-field, .select-field {
     width: 100%;
@@ -166,9 +166,23 @@ h1 {
 .btn:hover { background-color: #4a4a4a; }
 .btn-plus { background-color: var(--accent-color); }
 .btn-plus:hover { background-color: var(--accent-hover); }
+.btn-danger {
+    background-color: #b71c1c;
+    color: #fff;
+    font-size: 14px;
+}
+.btn-danger:hover { background-color: #d32f2f; }
+
+.counter {
+    display: inline-block;
+    min-width: 34px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
+}
 
 /* ======================================================== */
-/* 5. СТРОКИ СКЛАДА И ПРИКАЗОВ                              */
+/* 5. СТРОКИ СПИСКОВ (приказы, предложки, каталог)          */
 /* ======================================================== */
 .recipe-item, .material-item {
     display: flex;
@@ -235,38 +249,12 @@ h1 {
     line-height: 1.2;
 }
 
-/* --- Блок управления: фиксированные ширины, кнопки не съезжают --- */
 .controls {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
 }
-
-.counter {
-    display: inline-block;
-    min-width: 34px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 15px;
-}
-
-.material-count {
-    display: inline-block;
-    min-width: 110px;
-    text-align: right;
-    color: var(--orange-color);
-    font-weight: bold;
-    margin-left: 10px;
-    white-space: nowrap;
-}
-
-.status-done {
-    background-color: rgba(46, 125, 40, 0.15);
-    border-color: rgba(46, 125, 40, 0.3);
-}
-
-.status-done .material-count { color: #81c784; }
 
 .leader-badge {
     background: #b71c1c;
@@ -286,97 +274,8 @@ h1 {
 }
 
 /* ======================================================== */
-/* 6. НАРЕЗЧИК ИКОНОК                                       */
+/* 6. ПЛИТОЧНАЯ РАСКЛАДКА СКЛАДА                              */
 /* ======================================================== */
-.slicer-workspace {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.canvas-container {
-    position: relative;
-    border: 2px solid #444;
-    background: #000;
-    overflow: auto;
-    max-height: 500px;
-}
-
-#screenshot-canvas {
-    display: block;
-    cursor: crosshair;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-#crop-selector {
-    position: absolute;
-    border: 2px dashed var(--orange-color);
-    background: rgba(255, 183, 77, 0.15);
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-    pointer-events: none;
-    display: none;
-    z-index: 2;
-}
-
-.slicer-controls-row {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    flex-wrap: wrap;
-    background: rgba(0,0,0,0.4);
-    padding: 15px;
-    border-radius: 4px;
-    margin-top: 10px;
-}
-
-.slicer-select {
-    background: #2b2b2b;
-    color: #fff;
-    border: 1px solid var(--border-color);
-    padding: 8px;
-    border-radius: 4px;
-    min-width: 220px;
-    font-size: 13px;
-}
-
-#preview-canvas {
-    background-color: rgba(0,0,0,0.5);
-    border: 1px solid var(--orange-color);
-    border-radius: 4px;
-}
-
-#slicer-status {
-    font-family: monospace;
-    font-size: 12px;
-    padding: 4px 0;
-    min-height: 18px;
-}
-
-/* ======================================================== */
-/* 7. КОНСТРУКТОР ИНГРЕДИЕНТОВ (вкладка Лидера)             */
-/* ======================================================== */
-.ingredients-constructor-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-    align-items: center;
-}
-
-.ingredients-constructor-row .select-field {
-    flex: 1;
-    margin-bottom: 0;
-}
-
-.ingredients-constructor-row .input-field {
-    width: 70px;
-    margin-bottom: 0;
-}
-/* ======================================================== */
-/* ПЛИТОЧНАЯ РАСКЛАДКА СКЛАДА                                */
-/* ======================================================== */
-
 .material-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -391,102 +290,4 @@ h1 {
     gap: 6px;
     padding: 10px 8px 8px 8px;
     background-color: rgba(255, 255, 255, 0.02);
-    border: 1px solid #2b2b2b;
-    border-radius: 6px;
-    position: relative;
-    transition: background-color 0.2s, border-color 0.2s;
-    min-height: 148px;
-    box-sizing: border-box;
-}
-
-/* В плане — надо собрать */
-.material-tile.tile-need {
-    background-color: rgba(255, 183, 77, 0.12);
-    border-color: rgba(255, 183, 77, 0.5);
-}
-
-/* В плане — готово */
-.material-tile.tile-done {
-    background-color: rgba(46, 125, 50, 0.18);
-    border-color: rgba(46, 125, 50, 0.6);
-}
-
-.material-tile .tile-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-    text-align: center;
-    line-height: 1.15;
-    width: 100%;
-    min-height: 26px;
-    max-height: 26px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    word-break: break-word;
-}
-
-.material-tile .tile-icon {
-    width: 56px;
-    height: 56px;
-    object-fit: contain;
-    background-color: #151515;
-    border: 1px solid #333;
-    border-radius: 4px;
-    flex-shrink: 0;
-}
-
-.material-tile .tile-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-    justify-content: center;
-}
-
-.material-tile .tile-controls .btn {
-    width: 26px;
-    height: 26px;
-    font-size: 14px;
-    border-radius: 4px;
-}
-
-.material-tile .tile-controls .counter {
-    min-width: 28px;
-    font-size: 14px;
-    color: #ffb74d;
-    text-align: center;
-}
-
-.material-tile .tile-badge {
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 11px;
-    font-weight: bold;
-    color: var(--orange-color);
-    background: rgba(0,0,0,0.55);
-    border-radius: 3px;
-    padding: 1px 5px;
-    min-width: 18px;
-    text-align: center;
-}
-
-.material-tile.tile-done .tile-badge {
-    color: #81c784;
-}
-
-.material-tile .tile-status {
-    position: absolute;
-    bottom: 4px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 10px;
-    color: #888;
-}
-
-.material-tile.tile-done .tile-status { color: #81c784; font-weight: bold; }
-.material-tile.tile-need .tile-status { color: var(--orange-color); }
+    border: 

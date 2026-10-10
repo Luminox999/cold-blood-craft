@@ -1,17 +1,9 @@
 // ============================================================
 // 0. ГЛОБАЛЬНОЕ СОСТОЯНИЕ
 // ============================================================
-// craftData инициализируется пустым. Заполняется из Firebase после логина.
-// Если объект уже объявлен где-то (например, ты его оставил в locations.js) —
-// используем существующий, чтобы не было конфликта объявлений.
 var craftData = (typeof craftData !== 'undefined') ? craftData : {};
-
 var hiddenRecipes = (typeof hiddenRecipes !== 'undefined') ? hiddenRecipes : {};
 var globalIcons = (typeof globalIcons !== 'undefined') ? globalIcons : { items: {}, materials: {} };
-
-// Снимок ключей, которые пришли из Firebase (кастомные рецепты).
-// Нужен, чтобы отличать их от «базовых» — сейчас базовых нет, но логика сохранена
-// на случай, если позже добавишь shared-рецепты.
 var cloudRecipeKeys = {};
 
 // ============================================================
@@ -52,6 +44,7 @@ function syncIconsFromCloud() {
             renderMainDashboard();
             renderLeaderEditPanel();
             renderMaterialsCatalog();
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
         })
         .catch(function (err) { console.error("Ошибка синхронизации иконок:", err); });
 }
@@ -79,11 +72,12 @@ function syncMaterialsCatalog() {
         .catch(function (err) { console.error("Ошибка каталога материалов:", err); });
 }
 
-// Уникальный список всех материалов: из каталога + из всех рецептов + из склада
 function getAllAvailableMaterials() {
     var set = new Set();
 
-    for (var ck in globalMaterialsCatalog) set.add(ck);
+    if (typeof globalMaterialsCatalog !== 'undefined' && globalMaterialsCatalog) {
+        for (var ck in globalMaterialsCatalog) set.add(ck);
+    }
 
     if (typeof craftData !== 'undefined' && craftData) {
         for (var rk in craftData) {
@@ -94,7 +88,7 @@ function getAllAvailableMaterials() {
         }
     }
 
-    if (typeof globalWarehouse !== 'undefined') {
+    if (typeof globalWarehouse !== 'undefined' && globalWarehouse) {
         for (var wk in globalWarehouse) set.add(wk);
     }
 
@@ -143,8 +137,7 @@ window.addMaterialToCatalog = function (name) {
         })
         .then(function () {
             renderMaterialsCatalog();
-            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
-            // Обновляем селекты во всех строках конструктора, чтобы новый материал появился в списке
+            // Перестраиваем селекты в конструкторе
             var container = document.getElementById("ingredients-constructor-container");
             if (container) {
                 var rows = container.children;
@@ -162,6 +155,7 @@ window.addMaterialToCatalog = function (name) {
                     if (current) sel.value = current;
                 }
             }
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
             alert("Материал \"" + name + "\" добавлен в справочник.");
         })
         .catch(function (err) { alert("Не удалось добавить материал: " + err.message); });
@@ -187,19 +181,14 @@ function syncWithCloud() {
             hiddenRecipes = safeData.hidden_recipes || {};
             pendingRecipes = safeData.recipes_pending || {};
 
-            // Синхронизируем рецепты: то, что пришло из Firebase — кладём.
-            // То, что было раньше из Firebase, но теперь удалено — убираем.
             var freshRecipes = safeData.custom_recipes || {};
 
-            // Удаляем старые облачные рецепты, которых больше нет
             for (var oldKey in cloudRecipeKeys) {
                 if (!freshRecipes[oldKey]) {
                     delete craftData[oldKey];
                     delete cloudRecipeKeys[oldKey];
                 }
             }
-
-            // Добавляем/обновляем актуальные
             for (var key in freshRecipes) {
                 craftData[key] = freshRecipes[key];
                 cloudRecipeKeys[key] = true;
@@ -213,7 +202,6 @@ function syncWithCloud() {
         })
         .catch(function (err) {
             console.error("Ошибка синхронизации данных:", err);
-            // Даже при ошибке рисуем то, что есть локально — интерфейс не должен зависать
             renderLeaderEditPanel();
             renderMainDashboard();
             renderPendingRecipes();
@@ -271,14 +259,13 @@ function renderMainDashboard() {
         }
     }
 
-    // Заголовок панели приказов
     if (visibleRecipes === 0) {
         ordersPanel.innerHTML = '<div class="empty-message">В базе фракции пока нет рецептов. Лидер может добавить их во вкладке «Записать рецепт».</div>';
     } else {
         ordersPanel.innerHTML = ordersHtml || '<div class="empty-message">Лидер фракции еще не выдал приказов на сборку ресурсов.</div>';
     }
 
-    // Список материалов склада = (из рецептов) ∪ (из склада) ∪ (из справочника)
+    // Список материалов склада = (рецепты) ∪ (склад) ∪ (каталог)
     var allMats = new Set();
     for (var k2 in craftData) {
         if (isRecipeHidden(k2)) continue;
@@ -289,10 +276,9 @@ function renderMainDashboard() {
     for (var wk in globalWarehouse) allMats.add(wk);
     for (var ck in globalMaterialsCatalog) allMats.add(ck);
 
-        var sortedMats = Array.from(allMats).sort();
+    var sortedMats = Array.from(allMats).sort();
 
-    // Сортируем: сначала материалы в плане (Надо), потом — вне плана.
-    // Внутри каждой группы — по алфавиту.
+    // Сортировка: сначала "в плане", потом остальные. Внутри — по алфавиту.
     sortedMats.sort(function (a, b) {
         var aReq = totalRequiredMaterials[a] || 0;
         var bReq = totalRequiredMaterials[b] || 0;
@@ -307,19 +293,19 @@ function renderMainDashboard() {
         return;
     }
 
-    // Проверка необходимости пересобрать строки
+    // Проверяем, надо ли пересобрать плитки
     var existingNames = [];
-    var existingRows = warehousePanel.querySelectorAll(".material-item");
-    for (var i = 0; i < existingRows.length; i++) existingNames.push(existingRows[i].getAttribute("data-mat-name"));
+    var existingTiles = warehousePanel.querySelectorAll(".material-tile");
+    for (var i = 0; i < existingTiles.length; i++) existingNames.push(existingTiles[i].getAttribute("data-mat-name"));
 
-    var needsRebuild = existingRows.length !== sortedMats.length;
+    var needsRebuild = existingTiles.length !== sortedMats.length;
     if (!needsRebuild) {
         for (var j = 0; j < sortedMats.length; j++) {
             if (existingNames[j] !== sortedMats[j]) { needsRebuild = true; break; }
         }
     }
 
-        if (needsRebuild) {
+    if (needsRebuild) {
         warehousePanel.innerHTML = "";
         sortedMats.forEach(function (m) {
             var tile = document.createElement("div");
@@ -334,12 +320,11 @@ function renderMainDashboard() {
                 + '<span class="counter" id="mat-stock-cnt-' + m + '">0</span>'
                 + '<button class="btn btn-plus" onclick="changeWarehouseStock(\'' + m + '\', 1)">+</button>'
                 + '</div>'
-                + '<span class="tile-badge" id="mat-badge-' + m + '"></span>'
                 + '<span class="tile-status" id="mat-status-text-' + m + '">Вне плана</span>';
             warehousePanel.appendChild(tile);
         });
     } else {
-        // Обновляем только иконки на случай, если из облака прилетели новые
+        // Обновляем иконки, если прилетели из облака
         sortedMats.forEach(function (m) {
             var tileEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
             if (!tileEl) return;
@@ -355,7 +340,7 @@ function renderMainDashboard() {
     }
 
     // Обновляем счётчики и статусы
-       sortedMats.forEach(function (m) {
+    sortedMats.forEach(function (m) {
         var reqQty = totalRequiredMaterials[m] || 0;
         var stockQty = globalWarehouse[m] || 0;
         var left = reqQty - stockQty;
@@ -363,28 +348,23 @@ function renderMainDashboard() {
         var tileEl = warehousePanel.querySelector('[data-mat-name="' + m + '"]');
         var stockCnt = document.getElementById("mat-stock-cnt-" + m);
         var statusTxt = document.getElementById("mat-status-text-" + m);
-        var badgeEl = document.getElementById("mat-badge-" + m);
 
         if (!tileEl || !stockCnt || !statusTxt) return;
 
         stockCnt.textContent = stockQty;
 
-        // Сбрасываем классы
         tileEl.classList.remove("tile-need", "tile-done");
 
         if (reqQty > 0) {
             if (left <= 0) {
                 tileEl.classList.add("tile-done");
                 statusTxt.textContent = "Готово!";
-                if (badgeEl) badgeEl.textContent = "";
             } else {
                 tileEl.classList.add("tile-need");
                 statusTxt.textContent = "Надо: " + left;
-                if (badgeEl) badgeEl.textContent = left;
             }
         } else {
             statusTxt.textContent = "Вне плана";
-            if (badgeEl) badgeEl.textContent = "";
         }
     });
 }
@@ -456,7 +436,6 @@ function renderLeaderEditPanel() {
         }
     }
 
-    // Обновляем счётчики
     for (var k in craftData) {
         if (isRecipeHidden(k)) continue;
         var cntEl = document.getElementById("lead-cnt-" + k);
@@ -573,6 +552,7 @@ window.approvePendingRecipe = function (pendingId) {
             renderPendingRecipes();
             renderLeaderEditPanel();
             renderMainDashboard();
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
             alert("Рецепт \"" + rec.name + "\" одобрен.");
         })
         .catch(function (err) { alert("Ошибка одобрения: " + err.message); });
@@ -617,6 +597,7 @@ window.deleteCraft = function (key) {
 
             renderLeaderEditPanel();
             renderMainDashboard();
+            if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
         })
         .catch(function (err) { alert("Ошибка удаления: " + err.message); });
 };
@@ -647,7 +628,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ============================================================
-// 10. ПЕРВИЧНЫЙ РЕНДЕР (до логина — показываем пустые панели)
+// 10. ПЕРВИЧНЫЙ РЕНДЕР
 // ============================================================
 document.addEventListener("DOMContentLoaded", function () {
     setTimeout(function () {
