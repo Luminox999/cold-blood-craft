@@ -155,6 +155,7 @@ function saveNewCraftFromConstructor() {
                 renderLeaderEditPanel();
                 renderMainDashboard();
                 syncWithCloud();
+                if (typeof refreshSlicerSelect === 'function') refreshSlicerSelect();
             })
             .catch(function (err) { alert("Ошибка: " + err.message); });
     } else {
