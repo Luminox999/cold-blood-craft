@@ -31,13 +31,15 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('current-room-title').textContent = roomText.toUpperCase();
 
         if (pass === MASTER_ADMIN_PASSWORD) {
-            isLeader = true;
-            document.getElementById('leader-tab-nav').style.display = 'block';
-            document.getElementById('user-status-text').textContent = "Режим ГЛАВНОГО АДМИНИСТРАТОРА СЕРВЕРА";
-            document.getElementById('user-status-text').style.color = "#ff5252";
-            enterFactionHQ();
-            return;
-        }
+			isLeader = true;
+			document.getElementById('leader-tab-nav').style.display = 'block';
+			var taskAdminNav = document.getElementById('task-admin-tab-nav');
+		if (taskAdminNav) taskAdminNav.style.display = 'block';
+			document.getElementById('user-status-text').textContent = "Режим ГЛАВНОГО АДМИНИСТРАТОРА СЕРВЕРА";
+			document.getElementById('user-status-text').style.color = "#ff5252";
+			enterFactionHQ();
+			return;
+		}
 
         fetch(FIREBASE_URL + "/rooms/" + currentRoom + "/password.json")
             .then(function (res) { return res.json(); })
@@ -100,7 +102,9 @@ document.addEventListener("DOMContentLoaded", function () {
             syncMaterialsCatalog();
             setInterval(syncMaterialsCatalog, 30000);
         }
-        if (typeof syncWithCloud === 'function') {
+        if (typeof syncTasks === 'function') {
+			syncTasks();
+		}if (typeof syncWithCloud === 'function') {
             syncWithCloud();
             setInterval(syncWithCloud, 3000);
         }

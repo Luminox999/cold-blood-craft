@@ -482,3 +482,249 @@ h1 {
 #pending-recipes-display .recipe-item {
     border-left: 3px solid var(--orange-color);
 }
+/* ======================================================== */
+/* МЕТАЗАДАЧИ                                                 */
+/* ======================================================== */
+
+/* Счётчик новых задач */
+.tasks-counter {
+    display: inline-block;
+    background: #b71c1c;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 10px;
+    animation: pulse-task 2s infinite;
+}
+
+@keyframes pulse-task {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+
+/* Карточка задачи */
+.task-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 4px solid var(--accent-color);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.task-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.task-card.task-done {
+    border-left-color: #81c784;
+    opacity: 0.75;
+}
+
+.task-card.task-overdue {
+    border-left-color: #ff5252;
+    background: rgba(183, 28, 28, 0.1);
+}
+
+.task-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.task-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.task-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: bold;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.task-badge-active { background: #2e7d32; color: #fff; }
+.task-badge-done { background: #1b5e20; color: #a5d6a7; }
+.task-badge-cancel { background: #555; color: #ccc; }
+
+.task-desc-preview {
+    font-size: 13px;
+    color: #bbb;
+    line-height: 1.45;
+    margin-bottom: 8px;
+}
+
+.task-progress,
+.task-deadline {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.task-card-foot {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #666;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 8px;
+}
+
+.task-target { color: #ffb74d; }
+.task-author { color: #888; }
+
+/* Модалка */
+.task-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    overflow-y: auto;
+    z-index: 2000;
+}
+
+.task-modal {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-width: 720px;
+    width: 100%;
+    padding: 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+}
+
+.task-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.task-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.task-modal-meta {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.task-modal-image img {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.task-modal-description {
+    font-size: 14px;
+    color: #ddd;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.task-modal-audio,
+.task-modal-map {
+    margin-bottom: 18px;
+}
+
+.task-audio-label,
+.task-map-label,
+.task-subtasks-label {
+    font-size: 12px;
+    color: #ffb74d;
+    font-weight: bold;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.task-modal-map img {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.task-modal-subtasks {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 18px;
+}
+
+.task-subtask {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ddd;
+}
+
+.task-subtask input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+.task-subtask.done span {
+    text-decoration: line-through;
+    color: #81c784;
+}
+
+.task-modal-reward {
+    background: rgba(255, 183, 77, 0.1);
+    border-left: 3px solid var(--orange-color);
+    padding: 10px 12px;
+    border-radius: 4px;
+    color: #ffcc80;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.task-modal-admin {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Строки подпунктов в админ-панели */
+.task-subtask-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.task-subtask-row .task-subtask-input {
+    flex: 1;
+    margin-bottom: 0;
+}
