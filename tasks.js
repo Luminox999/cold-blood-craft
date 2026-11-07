@@ -73,12 +73,28 @@ function saveTask(id, data) {
             renderTasksPanel();
             renderTaskAdminPanel();
             updateTasksBadge();
+
+            // === ОТПРАВКА УВЕДОМЛЕНИЯ В DISCORD (через Make) ===
+            // Проверяем, что задача только что создана (чтобы не спамить при редактировании)
+            if (data.createdAt && (Date.now() - data.createdAt < 5000)) {
+                fetch("https://hook.eu1.make.com/encqa7ypjpsoapr5qaeueh33645lw6b2", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: data.title,
+                        author: data.author,
+                        target: data.target === "all" ? "Всем" : data.target,
+                        description: data.description || "Без описания"
+                    })
+                }).catch(function(err) {
+                    console.error("Ошибка отправки уведомления в Discord:", err);
+                });
+            }
         })
         .catch(function (err) {
             alert("Не удалось сохранить задачу: " + err.message);
         });
 }
-
 function deleteTask(id) {
     if (!confirm("Удалить задачу навсегда?")) return;
     fetch(FIREBASE_URL + "/tasks/" + id + ".json", { method: "DELETE" })
